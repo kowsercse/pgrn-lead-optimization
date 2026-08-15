@@ -126,4 +126,5 @@ From the slides in [`resources/`](resources/):
 
 - Paperclip — native skill (`paperclip`)
 - Benchling — MCP server (`https://hackathon.mcp.bnchdev.org/mcp`), no dedicated skill
-- Proto, Modal, Biohub, BenchFlow, Sundial — plain SDK/CLI/API, no skill or MCP
+- Biohub — project-authored skill (`biohub`), no official skill exists upstream
+- Modal, `proto-tools`, `proto-language`, BenchFlow, Sundial — plain SDK/CLI/API, no skill or MCP

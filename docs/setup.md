@@ -1,5 +1,11 @@
 # Setup Instructions
 
+## This project
+1. `cd python`
+2. `uv sync` — installs everything in `pyproject.toml`: `proto-tools`, `esm`
+3. Run `modal setup` to link Modal compute
+4. Get a Biohub API key, store as `BIOHUB_API_KEY` (see `biohub` skill)
+
 ## Proto — `proto-tools`
 1. `pip install git+https://github.com/evo-design/proto-tools.git`
 
@@ -56,3 +62,4 @@
 1. Add server URL to MCP client: `https://paperclip.gxl.ai/mcp`
 2. Complete browser sign-in
 3. Keys at `paperclip.gxl.ai/keys`
+4. Copy `.env.example` to `.env`, store key as `PAPERCLIP_API_KEY`

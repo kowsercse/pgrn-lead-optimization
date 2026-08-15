@@ -4,6 +4,13 @@ Hackathon project for **re:AGENT**, 15–16 Aug 2026 (Stanford / Arc Institute).
 
 Project direction is not settled yet.
 
+## Layout
+
+- `python/` — Python code
+- `docs/` — documentation
+- `ui/` — empty, reserved for a future UI
+- `spec/` — spec docs for Claude
+
 ## Docs
 
 - [`docs/tools.md`](docs/tools.md) — sponsor platforms and what they can do
@@ -17,7 +24,6 @@ Project direction is not settled yet.
 ## Setup
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
+cd python
+uv sync
 ```

@@ -4,6 +4,13 @@ Hackathon project for **re:AGENT**, 15–16 Aug 2026 (Stanford / Arc Institute).
 
 Project direction is **not settled yet** — ask before assuming a target, modality, or pipeline.
 
+## Repo layout
+
+- [`python/`](python/) — Python code (`pyproject.toml`, `uv.lock`, `main.py`)
+- [`docs/`](docs/) — project + tool documentation
+- [`ui/`](ui/) — empty, reserved for a future UI
+- [`spec/`](spec/) — spec docs for Claude
+
 ## Docs
 
 - [`docs/tools.md`](docs/tools.md) — sponsor platforms, what each can do, source links
@@ -17,15 +24,14 @@ Project direction is **not settled yet** — ask before assuming a target, modal
 ## Setup
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
+cd python
+uv sync
 ```
 
 ## Repo state
 
-Still a scaffold — `main.py` is an unmodified PyCharm stub, `pyproject.toml` has no dependencies
-yet. No source layout exists; nothing to preserve conventions from.
+Still a scaffold — `python/main.py` is an unmodified PyCharm stub. `ui/` and `spec/` are empty.
+No source layout exists yet; nothing to preserve conventions from.
 
 ## Documentation style
 
