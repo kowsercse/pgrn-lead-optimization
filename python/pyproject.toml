@@ -5,6 +5,7 @@ requires-python = ">=3.13"
 dependencies = [
     "proto-tools @ git+https://github.com/evo-design/proto-tools.git",
     "esm @ git+https://github.com/Biohub/esm.git@main",
+    "conductor-python[agents]==2.0.0",
 ]
 
 [build-system]
