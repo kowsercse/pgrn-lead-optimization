@@ -30,12 +30,14 @@ From the slides in [`resources/`](resources/):
 - Four primitives: sequences, generators, constraints, optimizers
 - `proto-language`: constraint-based sequence design (DNA/RNA/protein); propose–score–refine loop
 - `proto-tools`: single Python interface over 17 tool categories, 60+ tools (full list below)
+- Source: [proto-tools](https://github.com/evo-design/proto-tools) · [proto-language](https://github.com/evo-design/proto-language) · [Arc Institute announcement](https://arcinstitute.org/news/proto)
 
 ### Modal
 - Serverless CPU/GPU compute, per-second billing
 - No infra reservation/management; containers start in ~1s
 - Single-GPU to multi-node runs (up to 128 B200s, 3200 Gbps InfiniBand) from one code file
 - Functions, images, secrets, schedules, GPU requirements, endpoints defined in Python
+- Source: [modal.com](https://modal.com/)
 
 ### Biohub Platform
 - Hosts ESMC (protein language model), ESMFold2, ESM Atlas
@@ -43,12 +45,14 @@ From the slides in [`resources/`](resources/):
 - ESM Atlas: 6.8B predicted protein structures/annotations, 1.1B with high-res ESMFold2 structures; free on AWS S3
 - Guardrails restrict controlled pathogen/toxin sequences and keywords
 - Access: install `esm` Python package + API key
+- Source: [biohub.ai](https://biohub.ai/) · [world model of protein biology](https://biohub.org/news/world-model-of-protein-biology/)
 
 ### Benchling
 - AI Connectors: MCP-based, connects scientific data to external AI tools
 - Dual MCP role: client (connects Benchling AI to external servers — Notion, SharePoint, Snowflake, Elicit) and server (exposes Benchling experiments/entities/results/relationships to approved AI assistants)
 - Governance: same auth/permission rules as Benchling itself; no external data storage or model training on customer data
 - Python SDK available for direct API access
+- Source: [Benchling Developer Platform](https://www.benchling.com/developer-platform) · [AI Connectors announcement](https://www.benchling.com/blog/benchling-launches-ai-connectors-to-power-data-ecosystem)
 
 ### BenchFlow
 - Universal environment/benchmark framework — "a benchmark is just a frozen environment"
@@ -59,12 +63,14 @@ From the slides in [`resources/`](resources/):
 - Outputs training-ready data: Verifiers/ORS reward format, ATIF, ADP
 - Task format: `task.md` (YAML config + markdown prompt); CLI for scaffolding/validation/migration
 - Requires Python 3.12+; no API key needed with subscription auth (`claude auth login`, Codex)
+- Source: [benchflow-ai/benchflow](https://github.com/benchflow-ai/benchflow)
 
 ### Sundial
 - Built by a human-agent collaboration research lab (San Francisco)
 - "The Editor" — Markdown/LaTeX editor with AI delegation, per-edit attribution, approve/reject changes
 - "Sun" — local-first log of all human + agent actions for reconstructing collaborative work
 - Desktop app drives locally installed Claude Code or Codex; web editor is template-based (bioRxiv, PLOS, NeurIPS, ICML)
+- Source: [sundial.md](https://sundial.md)
 
 ## Models in `proto-tools`
 
