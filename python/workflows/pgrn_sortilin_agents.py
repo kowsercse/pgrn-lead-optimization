@@ -6,35 +6,46 @@ See spec/conductor-workflow-spec.md for scope.
 
 Tool bodies are stubs (raise NotImplementedError) — only the agent
 topology (names, instructions, tool wiring, pipeline order) is implemented.
+Paperclip and Biohub are wired as MCP tools instead (see
+spec/conductor-workflow-spec.md, "MCP tool integration") — the Biohub MCP
+server itself is not yet built.
 
 Requirements:
     - Conductor server reachable via CONDUCTOR_SERVER_URL
     - CONDUCTOR_AGENT_LLM_MODEL set (defaults to anthropic/claude-sonnet-4-6)
+    - PAPERCLIP_API_KEY set (see .env.example) for the Paperclip MCP server
+    - BIOHUB_API_KEY set (see .env.example) for the Biohub MCP server
 """
 
 import os
 
-from conductor.ai.agents import Agent, AgentRuntime, tool
+from conductor.ai.agents import Agent, AgentRuntime, mcp_tool, tool
 
 LLM_MODEL = os.environ.get("CONDUCTOR_AGENT_LLM_MODEL", "anthropic/claude-sonnet-4-6")
+
+# Biohub has no hosted MCP server upstream (REST + `esm` SDK only) — this
+# assumes a local MCP server wrapping the `esm` SDK, not yet built.
+BIOHUB_MCP_URL = os.environ.get("BIOHUB_MCP_URL", "http://localhost:8090/mcp")
 
 
 # ── 1. Target validation ────────────────────────────────────────────
 
-@tool
-def search_paperclip(query: str) -> dict:
-    """Search Paperclip for biomedical literature supporting the query."""
-    raise NotImplementedError("TODO: call Paperclip MCP/CLI")
-
+paperclip_mcp = mcp_tool(
+    server_url="https://paperclip.gxl.ai/mcp",
+    name="paperclip_mcp",
+    description="Biomedical literature/trial/database search via Paperclip (11M+ papers, trials, databases).",
+    headers={"Authorization": "Bearer ${PAPERCLIP_API_KEY}"},
+    credentials=["PAPERCLIP_API_KEY"],
+)
 
 literature_agent = Agent(
     name="literature_agent",
     model=LLM_MODEL,
-    tools=[search_paperclip],
+    tools=[paperclip_mcp],
     instructions=(
-        "Given a therapeutic hypothesis, use search_paperclip to find literature "
-        "evidence for/against it. Extract any reported PGRN-Sortilin interaction "
-        "site or hotspot residues. Output a summary with citations."
+        "Given a therapeutic hypothesis, use the Paperclip MCP tools to find "
+        "literature evidence for/against it. Extract any reported PGRN-Sortilin "
+        "interaction site or hotspot residues. Output a summary with citations."
     ),
 )
 
@@ -47,10 +58,13 @@ def fetch_pdb_structure(pdb_id: str) -> dict:
     raise NotImplementedError("TODO: call proto-tools pdb database retrieval")
 
 
-@tool
-def predict_complex_structure(sequence_a: str, sequence_b: str) -> dict:
-    """Co-fold two sequences into a predicted complex structure."""
-    raise NotImplementedError("TODO: call AlphaFold3 / Boltz2 / Chai-1 via proto-tools")
+biohub_mcp = mcp_tool(
+    server_url=BIOHUB_MCP_URL,
+    name="biohub_mcp",
+    description="Biohub Platform ESM models (ESMFold2 structure prediction, ESMC, ESM Atlas) via MCP.",
+    headers={"Authorization": "Bearer ${BIOHUB_API_KEY}"},
+    credentials=["BIOHUB_API_KEY"],
+)
 
 
 @tool
@@ -62,11 +76,12 @@ def score_structure_quality(structure: dict) -> dict:
 structure_agent = Agent(
     name="structure_agent",
     model=LLM_MODEL,
-    tools=[fetch_pdb_structure, predict_complex_structure, score_structure_quality],
+    tools=[fetch_pdb_structure, biohub_mcp, score_structure_quality],
     instructions=(
         "Try fetch_pdb_structure for the PGRN-Sortilin complex first. If no "
-        "experimental structure exists, fall back to predict_complex_structure. "
-        "Always score_structure_quality on the resulting model before proceeding."
+        "experimental structure exists, fall back to the Biohub MCP tools to "
+        "predict one. Always score_structure_quality on the resulting model "
+        "before proceeding."
     ),
 )
 
