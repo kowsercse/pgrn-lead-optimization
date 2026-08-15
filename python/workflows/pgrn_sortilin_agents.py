@@ -6,15 +6,15 @@ See spec/conductor-workflow-spec.md for scope.
 
 Tool bodies are stubs (raise NotImplementedError) — only the agent
 topology (names, instructions, tool wiring, pipeline order) is implemented.
-Paperclip and Biohub are wired as MCP tools instead (see
-spec/conductor-workflow-spec.md, "MCP tool integration") — the Biohub MCP
-server itself is not yet built.
+Paperclip is wired as an MCP tool (see spec/conductor-workflow-spec.md,
+"MCP tool integration"); Biohub has no hosted MCP server upstream, so it's
+called directly via its REST API / `esm` SDK instead, as a stub tool.
 
 Requirements:
     - Conductor server reachable via CONDUCTOR_SERVER_URL
     - CONDUCTOR_AGENT_LLM_MODEL set (defaults to anthropic/claude-sonnet-4-6)
     - PAPERCLIP_API_KEY set (see .env.example) for the Paperclip MCP server
-    - BIOHUB_API_KEY set (see .env.example) for the Biohub MCP server
+    - BIOHUB_API_KEY set (see .env.example) for the Biohub API
 """
 
 import os
@@ -22,10 +22,6 @@ import os
 from conductor.ai.agents import Agent, AgentRuntime, mcp_tool, tool
 
 LLM_MODEL = os.environ.get("CONDUCTOR_AGENT_LLM_MODEL", "anthropic/claude-sonnet-4-6")
-
-# Biohub has no hosted MCP server upstream (REST + `esm` SDK only) — this
-# assumes a local MCP server wrapping the `esm` SDK, not yet built.
-BIOHUB_MCP_URL = os.environ.get("BIOHUB_MCP_URL", "http://localhost:8090/mcp")
 
 
 # ── 1. Target validation ────────────────────────────────────────────
@@ -58,13 +54,13 @@ def fetch_pdb_structure(pdb_id: str) -> dict:
     raise NotImplementedError("TODO: call proto-tools pdb database retrieval")
 
 
-biohub_mcp = mcp_tool(
-    server_url=BIOHUB_MCP_URL,
-    name="biohub_mcp",
-    description="Biohub Platform ESM models (ESMFold2 structure prediction, ESMC, ESM Atlas) via MCP.",
-    headers={"Authorization": "Bearer ${BIOHUB_API_KEY}"},
-    credentials=["BIOHUB_API_KEY"],
-)
+@tool
+def predict_complex_structure(sequence_a: str, sequence_b: str) -> dict:
+    """Co-fold two sequences into a predicted complex structure."""
+    raise NotImplementedError(
+        "TODO: call Biohub ESMFold2 via `esm` SDK/REST API (BIOHUB_API_KEY), "
+        "or AlphaFold3/Boltz2/Chai-1 via proto-tools"
+    )
 
 
 @tool
@@ -76,12 +72,11 @@ def score_structure_quality(structure: dict) -> dict:
 structure_agent = Agent(
     name="structure_agent",
     model=LLM_MODEL,
-    tools=[fetch_pdb_structure, biohub_mcp, score_structure_quality],
+    tools=[fetch_pdb_structure, predict_complex_structure, score_structure_quality],
     instructions=(
         "Try fetch_pdb_structure for the PGRN-Sortilin complex first. If no "
-        "experimental structure exists, fall back to the Biohub MCP tools to "
-        "predict one. Always score_structure_quality on the resulting model "
-        "before proceeding."
+        "experimental structure exists, fall back to predict_complex_structure. "
+        "Always score_structure_quality on the resulting model before proceeding."
     ),
 )
 
