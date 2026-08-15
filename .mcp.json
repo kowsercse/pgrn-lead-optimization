@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "benchling": {
+      "type": "http",
+      "url": "https://hackathon.mcp.bnchdev.org/mcp"
+    },
+    "paperclip": {
+      "type": "http",
+      "url": "https://paperclip.gxl.ai/mcp"
+    }
+  }
+}

@@ -5,7 +5,8 @@ From the slides in [`resources/`](resources/):
 [Biohub](resources/biohub-platform-api.png),
 [Benchling](resources/benchling-developer-platform.png),
 [BenchFlow](resources/benchflow-setup.png),
-[Sundial](resources/sundial-writing-copilot.png).
+[Sundial](resources/sundial-writing-copilot.png),
+[Paperclip](resources/paperclip-install.png).
 
 ## Platforms
 
@@ -22,6 +23,9 @@ From the slides in [`resources/`](resources/):
 - **Sundial** — scientific writing copilot
   - Sundial Desktop
   - Sundial web editor
+- **Paperclip** — biomedical literature/trial/database search
+  - Local CLI
+  - Hosted MCP server
 
 ## Capabilities
 
@@ -72,6 +76,14 @@ From the slides in [`resources/`](resources/):
 - Desktop app drives locally installed Claude Code or Codex; web editor is template-based (bioRxiv, PLOS, NeurIPS, ICML)
 - Source: [sundial.md](https://sundial.md)
 
+### Paperclip
+- Searches 11M+ biomedical papers, trials, and databases
+- Two access modes, same corpus: local CLI or hosted MCP server
+- Local CLI supported in Claude Code, Codex, Cursor
+- Hosted MCP: Claude Desktop/claude.ai, ChatGPT, Codex, Windsurf, Antigravity
+- Has a native Claude Code skill (`paperclip`)
+- Source: [paperclip.gxl.ai](https://paperclip.gxl.ai)
+
 ## Models in `proto-tools`
 
 | Category | Tools |
@@ -112,7 +124,6 @@ From the slides in [`resources/`](resources/):
 
 ## Claude Code integration
 
-No Claude skill exists for any of these tools. The one exception is Benchling, which exposes an
-MCP server (`https://hackathon.mcp.bnchdev.org/mcp`) that a Claude Code / Desktop MCP client can
-connect to directly. Proto, Modal, Biohub, BenchFlow, and Sundial are plain SDKs/CLIs/APIs with no
-Claude-side wrapper.
+- Paperclip — native skill (`paperclip`)
+- Benchling — MCP server (`https://hackathon.mcp.bnchdev.org/mcp`), no dedicated skill
+- Proto, Modal, Biohub, BenchFlow, Sundial — plain SDK/CLI/API, no skill or MCP

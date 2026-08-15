@@ -45,3 +45,14 @@
 ## Sundial — Web
 1. Go to `sundial.md/templates`
 2. Pick template
+
+## Paperclip — Local CLI
+1. `curl -fsSL https://paperclip.gxl.ai/install.sh | bash`
+2. Sign in when prompted
+3. `paperclip install` → select agent
+4. Start new session, mention `/paperclip`
+
+## Paperclip — Hosted MCP
+1. Add server URL to MCP client: `https://paperclip.gxl.ai/mcp`
+2. Complete browser sign-in
+3. Keys at `paperclip.gxl.ai/keys`
