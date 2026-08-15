@@ -63,3 +63,17 @@
 2. Complete browser sign-in
 3. Keys at `paperclip.gxl.ai/keys`
 4. Copy `.env.example` to `.env`, store key as `PAPERCLIP_API_KEY`
+
+## Conductor OSS — Server
+1. Local checkout: `~/orkes/conductor/main-conductor`
+2. Or: `npm install -g @conductor-oss/conductor-cli`
+3. `conductor server start` — server + UI at `localhost:8080`
+
+## Conductor OSS — Python SDK
+1. Local checkout: `~/orkes/python-sdk/python-sdk`
+2. Or: `pip install conductor-python`
+3. Point at a server: `CONDUCTOR_SERVER_URL`, `CONDUCTOR_AUTH_KEY`, `CONDUCTOR_AUTH_SECRET` (Orkes Developer Edition), or run local server above
+
+## Conductor OSS — Claude Code skills
+1. `/plugin marketplace add conductor-oss/conductor-skills`
+2. `/plugin install conductor@conductor-skills`

@@ -26,6 +26,9 @@ From the slides in [`resources/`](resources/):
 - **Paperclip** — biomedical literature/trial/database search
   - Local CLI
   - Hosted MCP server
+- **Conductor OSS** — durable workflow/agentic orchestration engine (not a hackathon sponsor tool; local checkouts)
+  - Server — `~/orkes/conductor/main-conductor`
+  - Python SDK — `~/orkes/python-sdk/python-sdk`
 
 ## Capabilities
 
@@ -84,6 +87,14 @@ From the slides in [`resources/`](resources/):
 - Has a native Claude Code skill (`paperclip`)
 - Source: [paperclip.gxl.ai](https://paperclip.gxl.ai)
 
+### Conductor OSS
+- Durable workflow engine (built at Netflix, maintained by Orkes) for orchestrating microservices, AI agents, and workflows at scale
+- Engine persists every step — retries/state recovery handled by the server, not the caller's code
+- Python SDK: build workflows, workers, and durable AI agents (tool calls, human-in-the-loop approval); framework bridges for LangChain, LangGraph, Google ADK, OpenAI Agents, Claude Agent SDK
+- Server: `npm install -g @conductor-oss/conductor-cli && conductor server start` — local server + UI at `localhost:8080` in 60s
+- Has Claude Code skills (`conductor-skills`) for creating/running/operating workflows and agents
+- Source: [conductor-oss/conductor](https://github.com/conductor-oss/conductor) · [conductor-oss/python-sdk](https://github.com/conductor-oss/python-sdk)
+
 ## Models in `proto-tools`
 
 | Category | Tools |
@@ -127,4 +138,5 @@ From the slides in [`resources/`](resources/):
 - Paperclip — native skill (`paperclip`)
 - Benchling — MCP server (`https://hackathon.mcp.bnchdev.org/mcp`), no dedicated skill
 - Biohub — project-authored skill (`biohub`), no official skill exists upstream
+- Conductor OSS — native Claude Code skills (`conductor-skills`, install via plugin marketplace)
 - Modal, `proto-tools`, `proto-language`, BenchFlow, Sundial — plain SDK/CLI/API, no skill or MCP
