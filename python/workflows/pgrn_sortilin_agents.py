@@ -4,8 +4,9 @@ Implements the "Computational biologist review" stages from
 spec/therapeutic-hypothesis.md as a sequential Conductor agent pipeline.
 See spec/conductor-workflow-spec.md for scope.
 
-Tool bodies are stubs (raise NotImplementedError) — only the agent
-topology (names, instructions, tool wiring, pipeline order) is implemented.
+Most tool bodies are still stubs (raise NotImplementedError) — the agent
+topology (names, instructions, tool wiring, pipeline order) is the focus.
+`fetch_pdb_structure` is fully implemented (proto-tools' RCSB PDB retrieval).
 Paperclip is wired as an MCP tool (see spec/conductor-workflow-spec.md,
 "MCP tool integration"); Biohub has no hosted MCP server upstream, so it's
 called directly via its REST API / `esm` SDK instead, as a stub tool.
@@ -20,6 +21,16 @@ Requirements:
 import os
 
 from conductor.ai.agents import Agent, AgentRuntime, mcp_tool, tool
+from proto_tools.tools.database_retrieval.pdb.fetch_entry import (
+    PdbFetchEntryConfig,
+    PdbFetchEntryInput,
+    run_pdb_fetch_entry,
+)
+from proto_tools.tools.database_retrieval.pdb.fetch_fasta import (
+    PdbFetchFastaConfig,
+    PdbFetchFastaInput,
+    run_pdb_fetch_fasta,
+)
 
 LLM_MODEL = os.environ.get("CONDUCTOR_AGENT_LLM_MODEL", "anthropic/claude-sonnet-4-6")
 
@@ -50,8 +61,23 @@ literature_agent = Agent(
 
 @tool
 def fetch_pdb_structure(pdb_id: str) -> dict:
-    """Fetch an experimental structure from PDB."""
-    raise NotImplementedError("TODO: call proto-tools pdb database retrieval")
+    """Fetch experimental structure metadata, chain sequences, and a coordinates
+    file URL for a PDB accession (e.g. '6X48')."""
+    entry = run_pdb_fetch_entry(PdbFetchEntryInput(pdb_id=pdb_id), PdbFetchEntryConfig())
+    if not entry.title:
+        return {"pdb_id": pdb_id.upper(), "found": False}
+
+    fasta = run_pdb_fetch_fasta(PdbFetchFastaInput(pdb_id=pdb_id), PdbFetchFastaConfig())
+
+    return {
+        "pdb_id": pdb_id.upper(),
+        "found": True,
+        "title": entry.title,
+        "method": entry.method,
+        "resolution": entry.resolution,
+        "chains": [chain.model_dump() for chain in fasta.chains],
+        "structure_url": f"https://files.rcsb.org/download/{pdb_id.upper()}.pdb",
+    }
 
 
 @tool

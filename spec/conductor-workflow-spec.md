@@ -8,9 +8,12 @@ biologist review" flow as a Conductor agent pipeline, using the Conductor Python
 - In scope: agent topology — names, models, instructions, tool wiring, pipeline order
 - In scope: Paperclip wired as an MCP tool (`mcp_tool()`) — see "MCP tool
   integration" below
+- In scope: `fetch_pdb_structure` — fully implemented (proto-tools RCSB PDB
+  entry + FASTA retrieval, live-tested against real PDB accessions, e.g.
+  `6X48`/`6X4H`/`6X3L` — actual Sortilin-Progranulin co-crystal structures)
 - Out of scope: remaining tool bodies (including Biohub) — stubs only
-  (`raise NotImplementedError`), no real Biohub/PDB/PubChem/Vina/ADMET/
-  Benchling integration
+  (`raise NotImplementedError`), no real Biohub/PubChem/Vina/ADMET/Benchling
+  integration
 - Out of scope: the experimental hit/no-hit feedback loop back into screening
 - Out of scope: deployment/serving config, Conductor task/workflow JSON authoring
 
@@ -28,7 +31,7 @@ Sequential pipeline (`>>`), one agent per diagram stage:
 | # | Agent | Tools (stub) | Diagram stage |
 | --- | --- | --- | --- |
 | 1 | `literature_agent` | `mcp_tool` → Paperclip MCP server | Target validation |
-| 2 | `structure_agent` | `fetch_pdb_structure`, `predict_complex_structure` (Biohub API/`esm` SDK), `score_structure_quality` | Structural modeling |
+| 2 | `structure_agent` | `fetch_pdb_structure` (implemented), `predict_complex_structure` (Biohub API/`esm` SDK, stub), `score_structure_quality` (stub) | Structural modeling |
 | 3 | `interface_agent` | `map_interface_pocket` | Interface mapping |
 | 4 | `ligand_mining_agent` | `search_known_ligands` | Ligand mining |
 | 5 | `screening_agent` | `assemble_screening_library`, `dock_library`, `validate_positive_controls` | Library + docking (incl. validation gate) |
