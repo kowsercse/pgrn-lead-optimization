@@ -2,7 +2,10 @@
 name = "pgrn-lead-optimization"
 version = "0.1.0"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "proto-tools @ git+https://github.com/evo-design/proto-tools.git",
+    "esm @ git+https://github.com/Biohub/esm.git@main",
+]
 
 [build-system]
 requires = ["setuptools>=68"]
