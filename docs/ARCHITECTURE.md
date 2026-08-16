@@ -24,13 +24,13 @@ flowchart TD
     SC4 --> RES
     SC5 --> RES
 
-    RES --> JOINS["joins.py"]
-    JOINS --> J1["scaffold_match<br/>RDKit substructure"]
-    JOINS --> J2["pool_compounds<br/>merge sources, dedupe on InChIKey"]
-    JOINS --> J3["alias_resolution"]
-    JOINS --> J4["record_vs_compound"]
+    RES --> JOINS["harmonize.py<br/>resolve the same thing across sources"]
+    JOINS --> J2["pool_compounds<br/>same molecule, two databases"]
+    JOINS --> J3["alias_resolution<br/>same protein, several names"]
+    JOINS --> J4["record_vs_compound<br/>same evidence, two counts"]
 
-    J1 --> ANS["answers.py<br/>five questions + gaps"]
+    RECEPTOR["receptor.py<br/>scaffold_match — which structure"] --> ANS["answers.py<br/>five questions + gaps"]
+    RES --> RECEPTOR
     J2 --> ANS
     J3 --> ANS
     J4 --> ANS
@@ -163,7 +163,7 @@ sequenceDiagram
     participant D as dispatch.py
     participant S as scouts (x5)
     participant R as resolver.py
-    participant J as joins.py
+    participant J as harmonize.py
     participant DB as store.py
 
     Eng->>CLI: run --target <symbol>
@@ -182,7 +182,7 @@ sequenceDiagram
     R->>DB: insert RESOLUTION, demote on failure
 
     J->>DB: select resolved RECORDs
-    J->>J: scaffold_match, pool_compounds, alias, record_vs_compound
+    J->>J: pool_compounds, alias_resolution, record_vs_compound
     J->>DB: insert JOIN_RESULTs
 
     CLI->>DB: compose five ANSWERs + GAPs
@@ -239,7 +239,8 @@ pgrn-lead-optimization/
 │   ├── dispatch.py       # concurrent scouts, deadlines, required-scout rule
 │   ├── grades.py         # Grade enum, demotion rules
 │   ├── resolver.py       # citation gate, budget, cache
-│   ├── joins.py          # four cross-source joins
+│   ├── harmonize.py      # resolve the same thing across sources
+│   ├── receptor.py       # which structure to design against
 │   ├── answers.py        # five questions + gap list
 │   ├── replicate.py      # agreement on answer 1
 │   ├── feasibility.py    # deterministic checks, RDKit only

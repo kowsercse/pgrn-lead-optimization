@@ -20,7 +20,7 @@ stage gate.
 | 0 | Foundation | Sat 17:30–18:30 | 60 | Schema rejects a malformed grade |
 | 1 | Retrieval | Sat 18:30–20:50 | 140 | Five scouts return; killing one yields a gap |
 | 2 | Verification | Sat 20:50–22:50 | 120 | Fabricated accession is demoted and flagged |
-| 3 | Joins | Sat 22:50–00:20 | 90 | Pooling merges sources without double-counting |
+| 3 | Harmonise | Sat 22:50–00:20 | 90 | Pooling merges sources without double-counting |
 | 4 | Answers and render | Sun 00:20–02:00 | 100 | Dossier v1 opens with no network |
 | — | *Sleep* | Sun 02:00–07:00 | 300 | — |
 | 5 | Feasibility and loop | Sun 07:00–09:05 | 125 | All four outcomes reachable |
@@ -141,7 +141,7 @@ If it fails, stop and fix rather than proceeding.
 
 ---
 
-## Stage 3 — Joins
+## Stage 3 — Harmonise
 
 **Window** Sat 22:50–00:20 · 90 min · Applies D8
 
@@ -155,7 +155,8 @@ If it fails, stop and fix rather than proceeding.
    so they are pooled rather than partitioned. Canonicalisation stops the same molecule,
    reported by two databases under different SMILES, from being counted twice.
 
-2. **`scaffold_match`** (20 min) — RDKit substructure, patent core against co-crystal ligand.
+2. **`receptor.scaffold_match`** (20 min) — RDKit substructure, patent core against
+   co-crystal ligand. Feeds receptor selection, not the counts.
 
 3. **`alias_resolution`** (25 min) — pathway and phenotypic identifiers, not only the
    molecular target.
@@ -163,16 +164,18 @@ If it fails, stop and fix rather than proceeding.
 4. **`record_vs_compound`** (20 min) — reconcile activity-record counts against distinct
    compounds.
 
-Each join writes one `join_result` row.
+Each harmonisation writes one `join_result` row. `scaffold_match` moves to
+`dossier/receptor.py` — it links two different things to infer which structure to use,
+which is an inference rather than resolving sameness.
 
 ### Exit gate
 
 - pooling the public set with the patent set yields more than either alone, and fewer than their sum
 - `scaffold_match` true for the SORT1 core/UP4 pair, false for an unrelated ligand
-- Four `join_result` rows written per run
+- Three `join_result` rows written per run
 
-**Fallback** `alias_resolution` and `record_vs_compound` are cuttable; the first two joins
-carry the demo.
+**Fallback** `alias_resolution` is cuttable. Pooling and the count reconciliation are
+not — without them the headline number is wrong.
 
 ---
 
@@ -305,7 +308,7 @@ open dossier_v1.html                                   # stages 4+, with wifi of
 | 0 | `dossier.db` with eight tables and three CHECK constraints |
 | 1 | Records from five scouts; gap rows for any that timed out |
 | 2 | `resolution` rows; at least one demotion on the fabricated-accession test |
-| 3 | Four `join_result` rows |
+| 3 | Three `join_result` rows |
 | 4 | `dossier_v1.html` |
 | 5 | `check_result` rows; `dossier_v2.html`; branch-table test output |
 | 6 | Clean grep; `dossier_ctsl.html` |

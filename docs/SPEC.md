@@ -36,7 +36,7 @@
   - Box-defining ligand — from `structures`
   - Training set accessions — from `bioactivity`
   - Additional compound sources — from `patents`, pooled with the public set
-  - Series core scaffold — from `joins.scaffold_match`
+  - Series core scaffold — from `receptor.scaffold_match`
   - Second target — operator argument
 
 - **REGRESSION FIXTURE — SORT1** — `tests/fixtures/sort1.py`, `tests/` only
@@ -141,7 +141,8 @@
   - `dossier/dispatch.py`
   - `dossier/grades.py`
   - `dossier/resolver.py`
-  - `dossier/joins.py`
+  - `dossier/harmonize.py`
+  - `dossier/receptor.py`
   - `dossier/answers.py`
   - `dossier/replicate.py`
   - `dossier/feasibility.py`
@@ -210,12 +211,17 @@
   - Implement fetcher: shell command
   - Use Paperclip for literature spans
 
-- **JOINS**
-  - `scaffold_match(series_core_smiles, ligand_smiles) -> bool`
+- **HARMONISATION** — resolving the same thing across sources
   - `pool_compounds(*sources) -> set[str]` — merge every source, deduplicated on InChIKey
   - `alias_resolution(target) -> list[str]`
   - `record_vs_compound(records) -> tuple[int, int]`
-  - Write one `join_result` row per join
+  - Write one `join_result` row per harmonisation
+  - Nothing here looks for a difference between sources; every source contributes
+
+- **RECEPTOR SELECTION** — an inference, not harmonisation
+  - `receptor.scaffold_match(series_core_smiles, ligand_smiles) -> bool`
+  - Direction matters: the core must sit inside the bound ligand
+  - A chemotype match can outweigh a sharper structure of an unrelated site
 
 - **FEASIBILITY**
   - Run after dossier v1 is written

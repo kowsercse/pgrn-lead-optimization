@@ -1,16 +1,23 @@
-"""Cross-source joins — the findings no single database returns.
+"""Harmonisation — making the sources agree about what is the same thing.
 
-Any one query returns a list. The value is in the joins between sources:
+Five databases describe overlapping reality in incompatible ways. Before any count
+means anything, three kinds of sameness have to be resolved:
 
-  1. scaffold_match       a patent series' core against a structure's bound ligand,
-                          yielding a receptor matched to the chemotype being scored
-  2. pool_compounds       every source merged on canonical identity, so the same
-                          molecule reported by two databases is not counted twice
-  3. alias_resolution     series filed against pathway or phenotypic identifiers
-                          rather than the molecular target
-  4. record_vs_compound   activity-record counts reconciled against distinct compounds
+  same molecule    pool_compounds     one molecule in two databases, written two ways,
+                                      must be one entry — otherwise the target looks
+                                      richer in chemical matter than it is
+  same protein     alias_resolution   one protein under several names; work filed under
+                                      a pathway or disease name is invisible to a search
+                                      on the protein's own name
+  same evidence    record_vs_compound one molecule measured several times is one
+                                      molecule; reporting the measurement count
+                                      overstates the available matter
 
-All four are pure. Only `alias_resolution` reaches outward, and its lookup is injected.
+This is not comparison for difference. Nothing here looks for what one source has and
+another lacks — every source contributes, and harmonisation is what stops the same fact
+being counted twice or missed entirely.
+
+All three are pure. Only `alias_resolution` reaches outward, and its lookup is injected.
 """
 from __future__ import annotations
 
@@ -39,7 +46,7 @@ def _keys(smiles: Iterable[str]) -> set[str]:
 
 
 def pool_compounds(*sources: Iterable[str]) -> set[str]:
-    """Join 2. Merge every source on canonical identity.
+    """Merge every source on canonical identity.
 
     All measured molecules are evidence of chemical matter, wherever they were
     deposited, so they are pooled rather than partitioned. Canonical identity is what
@@ -52,19 +59,10 @@ def pool_compounds(*sources: Iterable[str]) -> set[str]:
     return pooled
 
 
-def scaffold_match(series_core_smiles: str, ligand_smiles: str) -> bool:
-    """Join 1. Is the series core contained in the ligand? Direction matters."""
-    core = Chem.MolFromSmiles(series_core_smiles)
-    ligand = Chem.MolFromSmiles(ligand_smiles)
-    if core is None or ligand is None:
-        return False
-    return ligand.HasSubstructMatch(core)
-
-
 def alias_resolution(
     target: str, *, lookup: Callable[[str], Sequence[str]]
 ) -> list[str]:
-    """Join 3. Pathway and phenotypic identifiers, not only the molecular target.
+    """Pathway and phenotypic identifiers, not only the molecular target.
     A lookup failure degrades to the target alone rather than taking the run down."""
     try:
         found = list(lookup(target))
@@ -74,7 +72,7 @@ def alias_resolution(
 
 
 def record_vs_compound(n_records: int, n_distinct: int) -> tuple[int, int, bool]:
-    """Join 4. Reconcile the two counts. `conflated` is True when they differ, which
+    """Reconcile the two counts. `conflated` is True when they differ, which
     is the normal case — the same molecule is measured in several assays. Reporting
     the record count as the compound count overstates the available matter."""
     if n_distinct > n_records:
@@ -93,20 +91,15 @@ def to_records(
     run_id: str,
     *,
     pooled: set[str],
-    scaffold_matched: bool,
     aliases: Sequence[str],
     counts: tuple[int, int, bool],
 ) -> list[Record]:
-    """Persist one `join_result` row per join and return the dossier records."""
+    """Persist one `join_result` row per harmonisation and return the dossier records."""
     n_records, n_distinct, conflated = counts
     findings = [
         ("pooled_compounds",
          f"{len(pooled)} distinct molecules across all sources",
          "pooled chemical matter"),
-        ("scaffold_match",
-         "series core is present in the receptor ligand" if scaffold_matched
-         else "series core is absent from the receptor ligand",
-         "scaffold match"),
         ("alias_resolution", ", ".join(aliases), "target aliases searched"),
         ("record_vs_compound",
          f"{n_records} activity records over {n_distinct} distinct compounds"

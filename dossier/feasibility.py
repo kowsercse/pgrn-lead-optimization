@@ -18,7 +18,7 @@ from typing import Any, Sequence
 from rdkit import Chem, RDLogger
 from rdkit.Chem.Scaffolds import MurckoScaffold
 
-from .joins import inchikey
+from .harmonize import inchikey
 
 RDLogger.DisableLog("rdApp.*")
 

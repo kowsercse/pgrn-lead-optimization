@@ -92,17 +92,25 @@ between them, the loop is decorative and should be reported as such.**
 | Assays | Readouts available; what a computational score proxies | Flag qHTS. A target can show tens of thousands of compounds where only a few hundred carry a real IC50 |
 | Literature | Mechanism, disease link, clinical outcomes including failures | Search phenotypic and pathway aliases, not only the direct target — a published series on this pathway was filed under a non-molecular target ID and is invisible to target-centric queries |
 
-## 4. The joins
+## 4. Harmonisation
 
 ![The two cross-source joins, with their real identifiers](figures/joins.svg)
 
-*Both joins cross sources that no one query spans. The first pairs a patent's chemical claim against a structure database's ligand chemistry, yielding a receptor matched to the chemotype being scored. The second merges every compound source on canonical identifiers, so the same molecule reported by two databases is counted once. Neither appears in any single database's output.*
+*Five databases describe overlapping reality in incompatible ways. Before any count means anything, three kinds of sameness have to be resolved.*
 
-Join 2 pools rather than partitions. All measured molecules are evidence of chemical
-matter wherever they were deposited; canonical identity is what stops double-counting.
-Two more joins belong in the same stage. **Alias resolution** catches series filed
-against pathway or phenotypic identifiers. **Record-versus-compound reconciliation**
-corrects the counting error above; it already caused one correction in the reference run.
+Nothing here looks for a difference between sources. Every source contributes;
+harmonisation is what stops the same fact being counted twice or missed entirely.
+
+| Sameness | Operation | Without it |
+| --- | --- | --- |
+| Same molecule | `pool_compounds` on InChIKey | one molecule in two databases counts twice, and the target looks richer than it is |
+| Same protein | `alias_resolution` | work filed under a pathway or disease name never appears |
+| Same evidence | `record_vs_compound` | one molecule measured five times reads as five molecules |
+
+**Receptor selection is separate**, in `dossier/receptor.py`. `scaffold_match` links two
+*different* things — a patent series' core and a structure's bound ligand — to infer
+which structure to design against. That is an inference, not resolving sameness, and a
+chemotype match can outweigh a sharper picture of an unrelated site.
 
 ## 5. Grading and the resolver gate
 

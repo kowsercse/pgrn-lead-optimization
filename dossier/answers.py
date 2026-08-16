@@ -96,7 +96,7 @@ def _matter(records: Sequence[Record]) -> Answer:
 
 
 def _series(records: Sequence[Record]) -> Answer:
-    joined = _claim(records, "scaffold match")
+    joined = _claim(records, "series core matches the receptor ligand")
     distinct = _claim(records, "distinct compounds with measured activity")
     if joined is not None:
         return Answer(3, QUESTIONS[2], joined.value + ".", _floor(joined.grade, joined))

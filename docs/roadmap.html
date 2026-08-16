@@ -415,7 +415,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 </tr>
 </tbody>
 </table></div>
-<h2 id="4-the-joins">4. The joins</h2>
+<h2 id="4-harmonisation">4. Harmonisation</h2>
 <figure><svg role="img" aria-label="The two cross-source joins, with their real identifiers" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 330" role="img" aria-label="Two cross-source joins. A patent series scaffold matched to a co-crystal ligand yields a chemotype-matched receptor. An InChIKey set difference between a ChEMBL set and a PubChem assay yields a prospective holdout with no overlap.">
       <defs>
         <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -476,8 +476,35 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
         <text x="700" y="266" font-size="11" opacity=".7">every source counted, none</text>
         <text x="700" y="282" font-size="11" opacity=".7">counted twice</text>
       </g>
-    </svg><figcaption>Both joins cross sources that no one query spans. The first pairs a patent's chemical claim against a structure database's ligand chemistry, yielding a receptor matched to the chemotype being scored. The second merges every compound source on canonical identifiers, so the same molecule reported by two databases is counted once. Neither appears in any single database's output.</figcaption></figure>
-<p>Join 2 pools rather than partitions. All measured molecules are evidence of chemical matter wherever they were deposited; canonical identity is what stops double-counting. Two more joins belong in the same stage. <strong>Alias resolution</strong> catches series filed against pathway or phenotypic identifiers. <strong>Record-versus-compound reconciliation</strong> corrects the counting error above; it already caused one correction in the reference run.</p>
+    </svg><figcaption>Five databases describe overlapping reality in incompatible ways. Before any count means anything, three kinds of sameness have to be resolved.</figcaption></figure>
+<p>Nothing here looks for a difference between sources. Every source contributes; harmonisation is what stops the same fact being counted twice or missed entirely.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Sameness</th>
+<th>Operation</th>
+<th>Without it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Same molecule</td>
+<td><code>pool_compounds</code> on InChIKey</td>
+<td>one molecule in two databases counts twice, and the target looks richer than it is</td>
+</tr>
+<tr>
+<td>Same protein</td>
+<td><code>alias_resolution</code></td>
+<td>work filed under a pathway or disease name never appears</td>
+</tr>
+<tr>
+<td>Same evidence</td>
+<td><code>record_vs_compound</code></td>
+<td>one molecule measured five times reads as five molecules</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Receptor selection is separate</strong>, in <code>dossier/receptor.py</code>. <code>scaffold_match</code> links two <em>different</em> things — a patent series' core and a structure's bound ligand — to infer which structure to design against. That is an inference, not resolving sameness, and a chemotype match can outweigh a sharper picture of an unrelated site.</p>
 <h2 id="5-grading-and-the-resolver-gate">5. Grading and the resolver gate</h2>
 <div class="scroll"><table>
 <thead>
