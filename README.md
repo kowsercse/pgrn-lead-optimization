@@ -26,14 +26,14 @@ Sortilin (SORT1) is the worked case.
 
 ## Status — 15 Aug, 20:50
 
-66 tests green. `pytest` from a fresh clone should pass with no network.
+89 tests green. `pytest` from a fresh clone should pass with no network.
 
 | Stage | State | Notes |
 |---|---|---|
 | 0 Foundation | **done** | store, schema, grade rules as CHECK constraints |
 | 1 Retrieval | **in progress** | dispatch + required-scout rule done; both required scouts (`structures`, `bioactivity`) done |
 | 2 Verification | **done** | resolver gate: budget, cache, frequency ordering, demotion |
-| 3 Joins | not started | |
+| 3 Joins | **done** | InChIKey disjointness, directional scaffold match, count reconciliation |
 | 4 Answers and render | not started | |
 | 5 Feasibility and loop | not started | carries judging criterion 1 |
 | 6 Audit and cold run | not started | agnosticism grep already passes |
