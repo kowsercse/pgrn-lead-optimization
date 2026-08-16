@@ -1,0 +1,13 @@
+{
+  "enabledPlugins": {
+    "conductor@conductor-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "conductor-skills": {
+      "source": {
+        "source": "github",
+        "repo": "conductor-oss/conductor-skills"
+      }
+    }
+  }
+}
