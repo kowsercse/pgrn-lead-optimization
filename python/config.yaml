@@ -37,7 +37,6 @@ ligand_mining:
 
 screening_library:
   candidate_smiles_file: null # path to a .smi/.sdf virtual-screening candidate set; set before running dock_library
-  decoy_count: 0
 
 docking:
   engine: vina

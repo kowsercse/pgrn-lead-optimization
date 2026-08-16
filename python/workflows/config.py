@@ -45,7 +45,6 @@ class LigandMiningConfig(BaseModel):
 
 class ScreeningLibraryConfig(BaseModel):
     candidate_smiles_file: str | None = None
-    decoy_count: int = 0
 
 
 class DockingConfig(BaseModel):

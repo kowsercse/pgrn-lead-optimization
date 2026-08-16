@@ -28,9 +28,17 @@ for the underlying flow.
   paper's same-numbered compound (confirmed: "Compound 24" resolved to a
   Nav1.7 blocker, not the PGRN-Sortilin inhibitor). Prefer a SMILES/InChIKey
   from the source literature over the bare compound number when available.
+- Done: `assemble_screening_library` / `dock_library` / `validate_positive_controls`
+  — proto-tools Vina docking, live-verified end-to-end against `6X48` (real
+  affinities, e.g. -7.07 kcal/mol on a 4-compound smoke test). Search box is
+  derived from `map_interface_pocket`'s residues (no reference-ligand
+  coordinates needed). Receptor heteroatoms (waters, glycans, the
+  co-crystallized ligand — including RCSB's "UNL" placeholder, which even
+  `allow_bad_residues` can't parameterize) are stripped before docking
+  (`workflows/tools/common.strip_heteroatoms`)
 - Done: runtime parameters (target IDs, thresholds, engine choices) moved to
   `python/config.yaml`, loaded via `python/workflows/config.py`
-- Stub: all other tools (4 remaining)
+- Stub: all other tools (2 remaining)
 
 ## Stage 1 — Structural foundation
 
@@ -51,11 +59,14 @@ for the underlying flow.
 
 ## Stage 3 — Screening library + docking
 
-- [ ] `assemble_screening_library` — compile candidate library + positive
-  controls (known ligands from Stage 2) + decoys
-- [ ] `dock_library` — vina (proto-tools), dock against the Stage 2 pocket
-- [ ] `validate_positive_controls` — re-dock known ligands, confirm expected
-  pose/rank recovered before trusting the full screen
+- [x] `assemble_screening_library` — candidate library (config-driven
+  `.smi`/`.sdf` file) + known-ligand positive controls from Stage 2 (no
+  decoys — the original hypothesis flow doesn't call for them, and a
+  meaningful decoy set needs a real property-matched database we don't have)
+- [x] `dock_library` — vina (proto-tools), search box from Stage 2's pocket
+  residues
+- [x] `validate_positive_controls` — rank/percentile check against
+  `docking.positive_control_rank_threshold_pct`
 
 ## Stage 4 — Triage + ADMET
 

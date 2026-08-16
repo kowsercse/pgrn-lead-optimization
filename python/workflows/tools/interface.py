@@ -8,23 +8,12 @@ contacts for a ligand-free (e.g. predicted) complex.
 
 from io import StringIO
 
-import requests
 from Bio.PDB import NeighborSearch, PDBParser
 from Bio.PDB.Polypeptide import is_aa
 
 from conductor.ai.agents import tool
 from workflows.config import load_config
-
-
-def _load_structure_text(structure: dict) -> str:
-    if structure.get("structure_pdb"):
-        return structure["structure_pdb"]
-    url = structure.get("structure_url")
-    if not url:
-        raise ValueError("structure must contain 'structure_url' or 'structure_pdb'")
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
-    return response.text
+from workflows.tools.common import load_structure_text
 
 
 @tool
@@ -40,7 +29,7 @@ def map_interface_pocket(structure: dict) -> dict:
     exclude = {name.upper() for name in cfg.exclude_resnames}
 
     parser = PDBParser(QUIET=True)
-    model = parser.get_structure("complex", StringIO(_load_structure_text(structure)))[0]
+    model = parser.get_structure("complex", StringIO(load_structure_text(structure)))[0]
     neighbor_search = NeighborSearch(list(model.get_atoms()))
 
     ligand_residues = [

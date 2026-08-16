@@ -26,6 +26,7 @@ from conductor.ai.agents import Agent, AgentRuntime, mcp_tool, tool
 from workflows.config import load_config
 from workflows.tools.interface import map_interface_pocket
 from workflows.tools.ligands import search_known_ligands
+from workflows.tools.screening import assemble_screening_library, dock_library, validate_positive_controls
 from workflows.tools.structure import fetch_pdb_structure, predict_complex_structure, score_structure_quality
 
 CONFIG = load_config()
@@ -108,24 +109,8 @@ ligand_mining_agent = Agent(
 
 
 # ── 5. Library + docking ─────────────────────────────────────────────
-
-@tool
-def assemble_screening_library(known_ligands: dict) -> dict:
-    """Assemble a screening library with positive controls and decoys."""
-    raise NotImplementedError("TODO: compile compound library + decoys")
-
-
-@tool
-def dock_library(library: dict, pocket: dict) -> dict:
-    """Dock a compound library against a binding pocket."""
-    raise NotImplementedError("TODO: call vina via proto-tools")
-
-
-@tool
-def validate_positive_controls(docking_results: dict) -> dict:
-    """Check whether known positive controls recovered their expected pose/rank."""
-    raise NotImplementedError("TODO: docking self-validation check")
-
+# Tools implemented in workflows/tools/screening.py (config-driven:
+# `screening_library.candidate_smiles_file`, `docking.*`).
 
 screening_agent = Agent(
     name="screening_agent",
