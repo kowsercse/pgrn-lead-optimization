@@ -3253,18 +3253,22 @@ name = "pgrn-lead-optimization"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "biopython" },
     { name = "conductor-python", extra = ["agents"] },
     { name = "esm" },
     { name = "proto-tools" },
     { name = "pyyaml" },
+    { name = "requests" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "biopython", specifier = ">=1.88" },
     { name = "conductor-python", extras = ["agents"], specifier = "==2.0.0" },
     { name = "esm", git = "https://github.com/Biohub/esm.git?rev=main" },
     { name = "proto-tools", git = "https://github.com/evo-design/proto-tools.git" },
     { name = "pyyaml", specifier = ">=6.0" },
+    { name = "requests", specifier = ">=2.32" },
 ]
 
 [[package]]

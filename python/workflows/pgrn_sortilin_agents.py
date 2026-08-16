@@ -24,6 +24,8 @@ import os
 from conductor.ai.agents import Agent, AgentRuntime, mcp_tool, tool
 
 from workflows.config import load_config
+from workflows.tools.interface import map_interface_pocket
+from workflows.tools.ligands import search_known_ligands
 from workflows.tools.structure import fetch_pdb_structure, predict_complex_structure, score_structure_quality
 
 CONFIG = load_config()
@@ -69,12 +71,8 @@ structure_agent = Agent(
 
 
 # ── 3. Interface mapping ─────────────────────────────────────────────
-
-@tool
-def map_interface_pocket(structure: dict) -> dict:
-    """Identify PPI interface residues and the druggable pocket."""
-    raise NotImplementedError("TODO: interface/pocket detection")
-
+# Tool implemented in workflows/tools/interface.py (config-driven:
+# `interface.ligand_contact_cutoff_angstrom`, `interface.exclude_resnames`).
 
 interface_agent = Agent(
     name="interface_agent",
@@ -89,12 +87,8 @@ interface_agent = Agent(
 
 
 # ── 4. Ligand mining ──────────────────────────────────────────────────
-
-@tool
-def search_known_ligands(target: str) -> dict:
-    """Find known tool compounds/chemical probes binding the target."""
-    raise NotImplementedError("TODO: query literature + PubChem/ChEMBL via proto-tools")
-
+# Tool implemented in workflows/tools/ligands.py (config-driven:
+# `target.known_ligand_names`, `ligand_mining.pubchem_query_field`).
 
 ligand_mining_agent = Agent(
     name="ligand_mining_agent",
@@ -103,7 +97,12 @@ ligand_mining_agent = Agent(
     instructions=(
         "Use search_known_ligands to compile known tool compounds/chemical "
         "probes for PGRN or Sortilin. These become pharmacophore seeds and "
-        "positive controls for screening."
+        "positive controls for screening.\n\n"
+        "Generic paper compound numbering (e.g. 'Compound 17') is ambiguous in "
+        "PubChem's name index and can resolve to an unrelated paper's "
+        "same-numbered compound — sanity-check resolved hits (molecular weight, "
+        "scaffold) against literature_agent's findings before trusting them as "
+        "positive controls."
     ),
 )
 

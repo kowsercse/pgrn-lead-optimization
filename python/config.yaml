@@ -25,7 +25,12 @@ structure_prediction:
 interface:
   ligand_contact_cutoff_angstrom: 4.5
   pocket_expand_residues: 0
-  exclude_resnames: ["HOH"] # ignore crystallographic waters when locating the bound ligand
+  # Crystallographic waters, glycans, and common cryoprotectants/buffer/ion additives —
+  # excluded so pocket detection isn't polluted by non-drug-like heteroatoms. Per-target
+  # inhibitor codes (e.g. 6X48/6X4H/6X3L's bound compounds) are deliberately NOT listed
+  # here so they remain the detected "ligand"; extend this list per target as needed.
+  exclude_resnames:
+    ["HOH", "GOL", "PEG", "EDO", "DMS", "MPD", "NAG", "BMA", "MAN", "FUC", "GAL", "SIA", "NA", "CL", "MG", "CA", "ZN", "K", "SO4", "PO4"]
 
 ligand_mining:
   pubchem_query_field: name # name | smiles | cid

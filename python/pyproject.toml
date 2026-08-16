@@ -7,6 +7,8 @@ dependencies = [
     "esm @ git+https://github.com/Biohub/esm.git@main",
     "conductor-python[agents]==2.0.0",
     "pyyaml>=6.0",
+    "biopython>=1.88",
+    "requests>=2.32",
 ]
 
 [build-system]

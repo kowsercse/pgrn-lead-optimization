@@ -36,7 +36,7 @@ class StructurePredictionConfig(BaseModel):
 class InterfaceConfig(BaseModel):
     ligand_contact_cutoff_angstrom: float = 4.5
     pocket_expand_residues: int = 0
-    exclude_resnames: list[str] = ["HOH"]
+    exclude_resnames: list[str] = ["HOH", "GOL", "PEG", "EDO", "DMS", "MPD", "NAG", "BMA", "MAN", "FUC", "GAL", "SIA", "NA", "CL", "MG", "CA", "ZN", "K", "SO4", "PO4"]
 
 
 class LigandMiningConfig(BaseModel):

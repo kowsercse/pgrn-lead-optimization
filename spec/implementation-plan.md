@@ -19,9 +19,18 @@ for the underlying flow.
   GPU/Modal compute to actually run, untested at runtime
 - Done: `literature_agent` wired to Paperclip's hosted MCP server — untested
   at runtime (no Conductor server/LLM credential exercised yet)
+- Done: `map_interface_pocket` — biopython neighbor search, live-verified
+  against `6X48`; ligand-vs-crystallization-artifact separation is
+  config-driven (`interface.exclude_resnames`)
+- Done: `search_known_ligands` — proto-tools PubChem lookup, live-verified;
+  **known limitation** — generic paper compound numbering ("Compound 17")
+  is ambiguous in PubChem's name index and can resolve to an unrelated
+  paper's same-numbered compound (confirmed: "Compound 24" resolved to a
+  Nav1.7 blocker, not the PGRN-Sortilin inhibitor). Prefer a SMILES/InChIKey
+  from the source literature over the bare compound number when available.
 - Done: runtime parameters (target IDs, thresholds, engine choices) moved to
   `python/config.yaml`, loaded via `python/workflows/config.py`
-- Stub: all other tools (6 remaining)
+- Stub: all other tools (4 remaining)
 
 ## Stage 1 — Structural foundation
 
@@ -34,12 +43,11 @@ for the underlying flow.
 
 ## Stage 2 — Interface + ligand mining
 
-- [ ] `map_interface_pocket` — derive pocket residues from the bound-ligand
-  contacts in `6X48`/`6X4H`/`6X3L` (hand-rolled: biopython neighbor search on
-  the `structure_url` file — no existing proto-tools wrapper for this)
-- [ ] `search_known_ligands` — proto-tools `pubchem` lookup; cross-reference
-  against the compounds already co-crystallized in `6X48`/`6X4H`/`6X3L`
-  (Compound 17/24/2)
+- [x] `map_interface_pocket` — bound-ligand contacts (biopython neighbor
+  search, no existing proto-tools wrapper); falls back to inter-chain
+  contacts when no ligand is bound (e.g. a predicted apo complex)
+- [x] `search_known_ligands` — proto-tools `pubchem` lookup on
+  `target.known_ligand_names`; see the compound-numbering caveat above
 
 ## Stage 3 — Screening library + docking
 
