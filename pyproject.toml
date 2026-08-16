@@ -1,9 +1,22 @@
 [project]
 name = "pgrn-lead-optimization"
 version = "0.1.0"
-requires-python = ">=3.13"
-dependencies = []
+requires-python = "==3.12.*"
+dependencies = ["rdkit", "requests"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+dossier = "dossier.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["dossier*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
