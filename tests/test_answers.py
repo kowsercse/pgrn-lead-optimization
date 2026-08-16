@@ -91,6 +91,39 @@ def test_chemical_matter_without_data_is_unverified():
     assert a.grade == "unverified"
 
 
+# --- answer 3: the congeneric series ------------------------------------
+#
+# Question 3 asks whether a family of related analogs exists to reason over. That is
+# a property of the compound set alone. It must not be answered from the receptor
+# match, which is question 1's business and can fail while a perfectly good series
+# exists. See DESIGN.md D9.
+
+def test_a_retrieved_series_is_reported_as_the_third_answer():
+    records = base_records() + [
+        count("congeneric series", "106 analogs on one core, 77 sub-uM")]
+    third = compose(records, gaps=[], verdict=None)[2]
+    assert "106 analogs" in third.value
+    assert third.grade == "measured"
+
+
+def test_the_series_answer_does_not_depend_on_the_receptor_match():
+    """A series either exists or it does not. Whether its core happens to match the
+    bound ligand decides which structure to use, not whether there is a series."""
+    records = base_records() + [
+        count("congeneric series", "106 analogs on one core, 77 sub-uM")]
+    third = compose(records, gaps=[], verdict=None)[2]
+    assert "receptor ligand" not in third.value.lower()
+
+
+def test_an_unanswerable_series_question_names_the_real_obstacle():
+    """Saying 'no series core matched' when the truth is 'we never retrieved the
+    structures' sends the reader looking for the wrong missing thing."""
+    third = compose(base_records(), gaps=[], verdict=None)[2]
+    assert "not established" in third.value.lower()
+    assert "structure" in third.value.lower()
+    assert "receptor ligand" not in third.value.lower()
+
+
 # --- answer 5: what is missing ------------------------------------------
 
 def test_gaps_are_listed_in_the_fifth_answer():

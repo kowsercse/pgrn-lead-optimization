@@ -330,6 +330,52 @@ act on under time pressure; the other three name tools nobody will reach for.
 | Replication reduced to answer 1 at n=2 | Weakens the agreement statistic. Answer 4 is deterministic, so replicating it measured nothing; answer 1 at n=2 still detects instability, just less precisely |
 | Required-scout rule may fire on a transient outage | Better than a confident verdict over absent data |
 
+## D9 — Question 3 is about the compound set, not about the receptor
+
+**Problem.** `_series` answered question 3 — *is there a congeneric series?* — from the
+claim `series core matches the receptor ligand`. Two things follow, and both are wrong.
+
+First, the question is mis-answered even when that claim exists. Whether a family of
+related analogs exists is a property of the compound set alone. Whether its core matches
+a bound ligand decides *which structure to design against*, which is question 1. A target
+can have an excellent 106-analog series and no matching co-structure; the honest answer to
+question 3 is then "yes, and no structure matches it", not "not established".
+
+Second, no component emits that claim any more. It was written by `to_records` until the
+harmonisation refactor moved `scaffold_match` into `dossier/receptor.py`. Since then the
+answer has fallen through to its second branch on every run, so question 3 has reported
+*"Not established … no series core has been matched to the receptor ligand"* regardless of
+the data. Question 4 has the same defect for the same reason: nothing emits
+`most recent measurement`, so it returns its placeholder on every run.
+
+Neither had a test. The two questions with no coverage in `test_answers.py` were exactly
+the two that could not produce an answer.
+
+**Options considered.**
+
+| Option | Rejected because |
+|---|---|
+| Re-emit `series core matches the receptor ligand` from `receptor.py` | Restores the claim but keeps the conflation. Question 3 would still be unanswerable whenever no structure matches |
+| Answer question 3 from `dominant_scaffold_n` in `feasibility.py` | Inverts the loop. The checks are supposed to measure the committed answer, not supply it |
+| Answer from a `congeneric series` record, and say plainly why it is missing | Chosen |
+
+**Decision.** `_series` reads a `congeneric series` claim. Grouping compounds into a series
+needs a structure per compound, which the bioactivity scout does not yet return, so on a
+live run the answer states that obstacle by name instead of blaming an unrelated one. Three
+tests pin it: a retrieved series is reported, the answer never mentions the receptor, and
+the unanswerable case names the real obstacle.
+
+**Left open.** Question 4 asks *is anyone still working on this target?* and is answered
+from `most recent measurement`, which nothing emits. It is also non-gating by design —
+`Feasibility.dormant` is reported and never branches. So it is the one question whose
+answer cannot change the output, and it currently has no answer either. The assays scout
+already retrieves `qHTS screens`, `assays carrying a real potency value` and
+`compounds behind qHTS screens`, none of which reach any answer, and which would decide
+whether the question-2 count is dose–response data or single-shot noise. Replacing
+question 4 with assay quality is the obvious move and is deferred to a decision, not made
+here.
+
+
 ## Changes to make in SPEC.md
 
 1. THRESHOLDS — delete `n_scaffolds >= 2`; add `n_distinct_inchikeys == n_analogs` and `dominant_scaffold_n >= 15`; demote the 80% rule to descriptive

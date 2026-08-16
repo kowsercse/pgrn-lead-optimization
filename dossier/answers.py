@@ -96,14 +96,23 @@ def _matter(records: Sequence[Record]) -> Answer:
 
 
 def _series(records: Sequence[Record]) -> Answer:
-    joined = _claim(records, "series core matches the receptor ligand")
+    """Whether a family of related analogs exists to reason over.
+
+    This is a property of the compound set by itself. It is deliberately not answered
+    from the receptor match: a scaffold match decides which structure to design against
+    (question 1), and it can fail while a perfectly good series exists. Answering
+    question 3 from it made every run report "not established". See DESIGN.md D9.
+    """
+    series = _claim(records, "congeneric series")
     distinct = _claim(records, "distinct compounds with measured activity")
-    if joined is not None:
-        return Answer(3, QUESTIONS[2], joined.value + ".", _floor(joined.grade, joined))
+    if series is not None:
+        return Answer(3, QUESTIONS[2], series.value + ".", _floor(series.grade, series))
     if distinct is not None:
         return Answer(3, QUESTIONS[2],
-                      f"Not established. {distinct.value} distinct compounds exist, but "
-                      "no series core has been matched to the receptor ligand.",
+                      f"Not established. {distinct.value} distinct compounds were "
+                      "retrieved, but grouping them into a series needs a chemical "
+                      "structure per compound, which the bioactivity scout does not "
+                      "yet return.",
                       "inferred")
     return Answer(3, QUESTIONS[2], "Not established — no compound set was retrieved.",
                   "unverified")
