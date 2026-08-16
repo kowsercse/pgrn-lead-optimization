@@ -3256,6 +3256,7 @@ dependencies = [
     { name = "conductor-python", extra = ["agents"] },
     { name = "esm" },
     { name = "proto-tools" },
+    { name = "pyyaml" },
 ]
 
 [package.metadata]
@@ -3263,6 +3264,7 @@ requires-dist = [
     { name = "conductor-python", extras = ["agents"], specifier = "==2.0.0" },
     { name = "esm", git = "https://github.com/Biohub/esm.git?rev=main" },
     { name = "proto-tools", git = "https://github.com/evo-design/proto-tools.git" },
+    { name = "pyyaml", specifier = ">=6.0" },
 ]
 
 [[package]]

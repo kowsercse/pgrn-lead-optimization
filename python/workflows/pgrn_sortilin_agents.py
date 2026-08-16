@@ -1,19 +1,20 @@
-"""Barebone Conductor agent pipeline for the PGRN-Sortilin screening flow.
+"""Conductor agent pipeline for the PGRN-Sortilin screening flow.
 
 Implements the "Computational biologist review" stages from
 spec/therapeutic-hypothesis.md as a sequential Conductor agent pipeline.
-See spec/conductor-workflow-spec.md for scope.
+See spec/conductor-workflow-spec.md for scope and spec/implementation-plan.md
+for what's real vs. what still needs a live credential/binary to exercise.
 
-Most tool bodies are still stubs (raise NotImplementedError) — the agent
-topology (names, instructions, tool wiring, pipeline order) is the focus.
-`fetch_pdb_structure` is fully implemented (proto-tools' RCSB PDB retrieval).
-Paperclip is wired as an MCP tool (see spec/conductor-workflow-spec.md,
+Tool bodies live in workflows/tools/ (one module per pipeline stage) and read
+their runtime parameters from config.yaml via workflows/config.py — target IDs,
+docking/ADMET thresholds, engine choices, etc. are config-driven, not hardcoded
+here. Paperclip is wired as a real hosted MCP tool (see spec/conductor-workflow-spec.md,
 "MCP tool integration"); Biohub has no hosted MCP server upstream, so it's
-called directly via its REST API / `esm` SDK instead, as a stub tool.
+called directly via its REST API / `esm` SDK instead.
 
 Requirements:
     - Conductor server reachable via CONDUCTOR_SERVER_URL
-    - CONDUCTOR_AGENT_LLM_MODEL set (defaults to anthropic/claude-sonnet-4-6)
+    - CONDUCTOR_AGENT_LLM_MODEL set (defaults to config.yaml's llm_model)
     - PAPERCLIP_API_KEY set (see .env.example) for the Paperclip MCP server
     - BIOHUB_API_KEY set (see .env.example) for the Biohub API
 """
@@ -21,18 +22,12 @@ Requirements:
 import os
 
 from conductor.ai.agents import Agent, AgentRuntime, mcp_tool, tool
-from proto_tools.tools.database_retrieval.pdb.fetch_entry import (
-    PdbFetchEntryConfig,
-    PdbFetchEntryInput,
-    run_pdb_fetch_entry,
-)
-from proto_tools.tools.database_retrieval.pdb.fetch_fasta import (
-    PdbFetchFastaConfig,
-    PdbFetchFastaInput,
-    run_pdb_fetch_fasta,
-)
 
-LLM_MODEL = os.environ.get("CONDUCTOR_AGENT_LLM_MODEL", "anthropic/claude-sonnet-4-6")
+from workflows.config import load_config
+from workflows.tools.structure import fetch_pdb_structure, predict_complex_structure, score_structure_quality
+
+CONFIG = load_config()
+LLM_MODEL = os.environ.get("CONDUCTOR_AGENT_LLM_MODEL", CONFIG.llm_model)
 
 
 # ── 1. Target validation ────────────────────────────────────────────
@@ -58,42 +53,8 @@ literature_agent = Agent(
 
 
 # ── 2. Structural modeling ───────────────────────────────────────────
-
-@tool
-def fetch_pdb_structure(pdb_id: str) -> dict:
-    """Fetch experimental structure metadata, chain sequences, and a coordinates
-    file URL for a PDB accession (e.g. '6X48')."""
-    entry = run_pdb_fetch_entry(PdbFetchEntryInput(pdb_id=pdb_id), PdbFetchEntryConfig())
-    if not entry.title:
-        return {"pdb_id": pdb_id.upper(), "found": False}
-
-    fasta = run_pdb_fetch_fasta(PdbFetchFastaInput(pdb_id=pdb_id), PdbFetchFastaConfig())
-
-    return {
-        "pdb_id": pdb_id.upper(),
-        "found": True,
-        "title": entry.title,
-        "method": entry.method,
-        "resolution": entry.resolution,
-        "chains": [chain.model_dump() for chain in fasta.chains],
-        "structure_url": f"https://files.rcsb.org/download/{pdb_id.upper()}.pdb",
-    }
-
-
-@tool
-def predict_complex_structure(sequence_a: str, sequence_b: str) -> dict:
-    """Co-fold two sequences into a predicted complex structure."""
-    raise NotImplementedError(
-        "TODO: call Biohub ESMFold2 via `esm` SDK/REST API (BIOHUB_API_KEY), "
-        "or AlphaFold3/Boltz2/Chai-1 via proto-tools"
-    )
-
-
-@tool
-def score_structure_quality(structure: dict) -> dict:
-    """Score a structure/complex model's quality."""
-    raise NotImplementedError("TODO: call ipsae / pdockq2 / dssp via proto-tools")
-
+# Tools implemented in workflows/tools/structure.py (config-driven:
+# `structure_prediction` engine choice, `structure_quality.chains`).
 
 structure_agent = Agent(
     name="structure_agent",
@@ -260,7 +221,7 @@ if __name__ == "__main__":
     with AgentRuntime() as runtime:
         result = runtime.run(
             pipeline,
-            "Therapeutic hypothesis: inhibiting the PGRN-Sortilin complex.",
+            f"Therapeutic hypothesis: inhibiting the {CONFIG.target.gene_a}-{CONFIG.target.gene_b} complex.",
         )
         result.print_result()
 

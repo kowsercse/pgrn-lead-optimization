@@ -16,6 +16,9 @@ Project direction is **not settled yet** — ask before assuming a target, modal
 - [`docs/tools.md`](docs/tools.md) — sponsor platforms, what each can do, source links
 - [`docs/setup.md`](docs/setup.md) — step-by-step install instructions per tool
 - [`docs/resources/`](docs/resources/) — original sponsor slides
+- [`spec/therapeutic-hypothesis.md`](spec/therapeutic-hypothesis.md) — PGRN-Sortilin screening flow
+- [`spec/conductor-workflow-spec.md`](spec/conductor-workflow-spec.md) — Conductor agent pipeline spec
+- [`spec/implementation-plan.md`](spec/implementation-plan.md) — multi-stage plan for the remaining tools
 
 ## Requirements
 
@@ -30,8 +33,10 @@ uv sync
 
 ## Repo state
 
-Still a scaffold — `python/main.py` is an unmodified PyCharm stub. `ui/` and `spec/` are empty.
-No source layout exists yet; nothing to preserve conventions from.
+`python/main.py` is still an unmodified PyCharm stub. `ui/` is empty.
+Real work lives in `python/workflows/pgrn_sortilin_agents.py` — a Conductor agent
+pipeline for the PGRN-Sortilin screening hypothesis (see `spec/implementation-plan.md`
+for what's implemented vs. stub).
 
 ## Documentation style
 

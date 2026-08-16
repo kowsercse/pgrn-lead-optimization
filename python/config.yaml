@@ -1,0 +1,65 @@
+# PGRN-Sortilin screening pipeline — runtime configuration.
+# Loaded by workflows/config.py; override the file path with PGRN_CONFIG_PATH.
+
+llm_model: anthropic/claude-sonnet-4-6
+
+target:
+  gene_a: GRN # progranulin
+  gene_b: SORT1 # sortilin
+  # Real Sortilin-Progranulin co-crystal structures (RCSB PDB).
+  pdb_ids: ["6X48", "6X4H", "6X3L"]
+  # Tool compounds co-crystallized in the structures above — seeds for ligand mining.
+  known_ligand_names: ["Compound 17", "Compound 24", "Compound 2"]
+
+structure_quality:
+  chains: null # null = score every polymer chain found in the structure
+
+structure_prediction:
+  # Used only when structure_agent falls back from fetch_pdb_structure (no experimental structure).
+  engine: boltz2 # boltz2 | chai1 | alphafold3 | rf3
+  use_msa: true
+  recycling_steps: 3
+  sampling_steps: 200
+  diffusion_samples: 1
+
+interface:
+  ligand_contact_cutoff_angstrom: 4.5
+  pocket_expand_residues: 0
+  exclude_resnames: ["HOH"] # ignore crystallographic waters when locating the bound ligand
+
+ligand_mining:
+  pubchem_query_field: name # name | smiles | cid
+
+screening_library:
+  candidate_smiles_file: null # path to a .smi/.sdf virtual-screening candidate set; set before running dock_library
+  decoy_count: 0
+
+docking:
+  engine: vina
+  exhaustiveness: 8
+  num_poses: 9
+  energy_range: 3.0
+  seed: 42
+  reference_ligand_padding_angstrom: 4.0
+  positive_control_rank_threshold_pct: 10.0 # controls must land in the top X% by score to "pass" validation
+
+hit_triage:
+  pains_filter: true
+  diversity_cluster_cutoff: 0.4 # Butina clustering distance cutoff (1 - Tanimoto)
+  top_n: 50
+
+admet:
+  provider: rdkit_proxy
+  lipinski_violations_max: 1
+  qed_min: 0.3
+
+prioritization:
+  weights:
+    docking_score: 0.5
+    admet: 0.3
+    diversity: 0.2
+  top_n: 20
+  benchling:
+    enabled: false # flip true once BENCHLING_CLIENT_ID/BENCHLING_CLIENT_SECRET + tenant schema IDs are confirmed
+    base_url: https://hackathon.bnchdev.org
+    results_folder_id: null
