@@ -1,19 +1,20 @@
-"""Barebone Conductor agent pipeline for the PGRN-Sortilin screening flow.
+"""Conductor agent pipeline for the PGRN-Sortilin screening flow.
 
 Implements the "Computational biologist review" stages from
 spec/therapeutic-hypothesis.md as a sequential Conductor agent pipeline.
-See spec/conductor-workflow-spec.md for scope.
+See spec/conductor-workflow-spec.md for scope and spec/implementation-plan.md
+for what's real vs. what still needs a live credential/binary to exercise.
 
-Most tool bodies are still stubs (raise NotImplementedError) — the agent
-topology (names, instructions, tool wiring, pipeline order) is the focus.
-`fetch_pdb_structure` is fully implemented (proto-tools' RCSB PDB retrieval).
-Paperclip is wired as an MCP tool (see spec/conductor-workflow-spec.md,
+Tool bodies live in workflows/tools/ (one module per pipeline stage) and read
+their runtime parameters from config.yaml via workflows/config.py — target IDs,
+docking/ADMET thresholds, engine choices, etc. are config-driven, not hardcoded
+here. Paperclip is wired as a real hosted MCP tool (see spec/conductor-workflow-spec.md,
 "MCP tool integration"); Biohub has no hosted MCP server upstream, so it's
-called directly via its REST API / `esm` SDK instead, as a stub tool.
+called directly via its REST API / `esm` SDK instead.
 
 Requirements:
     - Conductor server reachable via CONDUCTOR_SERVER_URL
-    - CONDUCTOR_AGENT_LLM_MODEL set (defaults to anthropic/claude-sonnet-4-6)
+    - CONDUCTOR_AGENT_LLM_MODEL set (defaults to config.yaml's llm_model)
     - PAPERCLIP_API_KEY set (see .env.example) for the Paperclip MCP server
     - BIOHUB_API_KEY set (see .env.example) for the Biohub API
 """
@@ -21,18 +22,18 @@ Requirements:
 import os
 
 from conductor.ai.agents import Agent, AgentRuntime, mcp_tool, tool
-from proto_tools.tools.database_retrieval.pdb.fetch_entry import (
-    PdbFetchEntryConfig,
-    PdbFetchEntryInput,
-    run_pdb_fetch_entry,
-)
-from proto_tools.tools.database_retrieval.pdb.fetch_fasta import (
-    PdbFetchFastaConfig,
-    PdbFetchFastaInput,
-    run_pdb_fetch_fasta,
-)
 
-LLM_MODEL = os.environ.get("CONDUCTOR_AGENT_LLM_MODEL", "anthropic/claude-sonnet-4-6")
+from workflows.config import load_config
+from workflows.tools.admet import predict_admet
+from workflows.tools.interface import map_interface_pocket
+from workflows.tools.ligands import search_known_ligands
+from workflows.tools.prioritization import rank_and_handoff
+from workflows.tools.screening import assemble_screening_library, dock_library, validate_positive_controls
+from workflows.tools.structure import fetch_pdb_structure, predict_complex_structure, score_structure_quality
+from workflows.tools.triage import filter_hits
+
+CONFIG = load_config()
+LLM_MODEL = os.environ.get("CONDUCTOR_AGENT_LLM_MODEL", CONFIG.llm_model)
 
 
 # ── 1. Target validation ────────────────────────────────────────────
@@ -58,42 +59,8 @@ literature_agent = Agent(
 
 
 # ── 2. Structural modeling ───────────────────────────────────────────
-
-@tool
-def fetch_pdb_structure(pdb_id: str) -> dict:
-    """Fetch experimental structure metadata, chain sequences, and a coordinates
-    file URL for a PDB accession (e.g. '6X48')."""
-    entry = run_pdb_fetch_entry(PdbFetchEntryInput(pdb_id=pdb_id), PdbFetchEntryConfig())
-    if not entry.title:
-        return {"pdb_id": pdb_id.upper(), "found": False}
-
-    fasta = run_pdb_fetch_fasta(PdbFetchFastaInput(pdb_id=pdb_id), PdbFetchFastaConfig())
-
-    return {
-        "pdb_id": pdb_id.upper(),
-        "found": True,
-        "title": entry.title,
-        "method": entry.method,
-        "resolution": entry.resolution,
-        "chains": [chain.model_dump() for chain in fasta.chains],
-        "structure_url": f"https://files.rcsb.org/download/{pdb_id.upper()}.pdb",
-    }
-
-
-@tool
-def predict_complex_structure(sequence_a: str, sequence_b: str) -> dict:
-    """Co-fold two sequences into a predicted complex structure."""
-    raise NotImplementedError(
-        "TODO: call Biohub ESMFold2 via `esm` SDK/REST API (BIOHUB_API_KEY), "
-        "or AlphaFold3/Boltz2/Chai-1 via proto-tools"
-    )
-
-
-@tool
-def score_structure_quality(structure: dict) -> dict:
-    """Score a structure/complex model's quality."""
-    raise NotImplementedError("TODO: call ipsae / pdockq2 / dssp via proto-tools")
-
+# Tools implemented in workflows/tools/structure.py (config-driven:
+# `structure_prediction` engine choice, `structure_quality.chains`).
 
 structure_agent = Agent(
     name="structure_agent",
@@ -108,12 +75,8 @@ structure_agent = Agent(
 
 
 # ── 3. Interface mapping ─────────────────────────────────────────────
-
-@tool
-def map_interface_pocket(structure: dict) -> dict:
-    """Identify PPI interface residues and the druggable pocket."""
-    raise NotImplementedError("TODO: interface/pocket detection")
-
+# Tool implemented in workflows/tools/interface.py (config-driven:
+# `interface.ligand_contact_cutoff_angstrom`, `interface.exclude_resnames`).
 
 interface_agent = Agent(
     name="interface_agent",
@@ -128,12 +91,8 @@ interface_agent = Agent(
 
 
 # ── 4. Ligand mining ──────────────────────────────────────────────────
-
-@tool
-def search_known_ligands(target: str) -> dict:
-    """Find known tool compounds/chemical probes binding the target."""
-    raise NotImplementedError("TODO: query literature + PubChem/ChEMBL via proto-tools")
-
+# Tool implemented in workflows/tools/ligands.py (config-driven:
+# `target.known_ligand_names`, `ligand_mining.pubchem_query_field`).
 
 ligand_mining_agent = Agent(
     name="ligand_mining_agent",
@@ -142,30 +101,19 @@ ligand_mining_agent = Agent(
     instructions=(
         "Use search_known_ligands to compile known tool compounds/chemical "
         "probes for PGRN or Sortilin. These become pharmacophore seeds and "
-        "positive controls for screening."
+        "positive controls for screening.\n\n"
+        "Generic paper compound numbering (e.g. 'Compound 17') is ambiguous in "
+        "PubChem's name index and can resolve to an unrelated paper's "
+        "same-numbered compound — sanity-check resolved hits (molecular weight, "
+        "scaffold) against literature_agent's findings before trusting them as "
+        "positive controls."
     ),
 )
 
 
 # ── 5. Library + docking ─────────────────────────────────────────────
-
-@tool
-def assemble_screening_library(known_ligands: dict) -> dict:
-    """Assemble a screening library with positive controls and decoys."""
-    raise NotImplementedError("TODO: compile compound library + decoys")
-
-
-@tool
-def dock_library(library: dict, pocket: dict) -> dict:
-    """Dock a compound library against a binding pocket."""
-    raise NotImplementedError("TODO: call vina via proto-tools")
-
-
-@tool
-def validate_positive_controls(docking_results: dict) -> dict:
-    """Check whether known positive controls recovered their expected pose/rank."""
-    raise NotImplementedError("TODO: docking self-validation check")
-
+# Tools implemented in workflows/tools/screening.py (config-driven:
+# `screening_library.candidate_smiles_file`, `docking.*`).
 
 screening_agent = Agent(
     name="screening_agent",
@@ -181,12 +129,7 @@ screening_agent = Agent(
 
 
 # ── 6. Hit triage ─────────────────────────────────────────────────────
-
-@tool
-def filter_hits(docking_results: dict) -> dict:
-    """Filter docking hits by score, pose plausibility, PAINS, and diversity."""
-    raise NotImplementedError("TODO: hit filtering/clustering")
-
+# Tool implemented in workflows/tools/triage.py (config-driven: `hit_triage.*`).
 
 triage_agent = Agent(
     name="triage_agent",
@@ -201,12 +144,7 @@ triage_agent = Agent(
 
 
 # ── 7. ADMET profiling ────────────────────────────────────────────────
-
-@tool
-def predict_admet(compounds: dict) -> dict:
-    """Predict ADMET properties for a set of compounds."""
-    raise NotImplementedError("TODO: ADMET prediction")
-
+# Tool implemented in workflows/tools/admet.py (config-driven: `admet.*`).
 
 admet_agent = Agent(
     name="admet_agent",
@@ -220,12 +158,8 @@ admet_agent = Agent(
 
 
 # ── 8. Prioritization ─────────────────────────────────────────────────
-
-@tool
-def rank_and_handoff(compounds: dict) -> dict:
-    """Rank the final shortlist and hand off to experimental validation."""
-    raise NotImplementedError("TODO: rank + push to Benchling")
-
+# Tool implemented in workflows/tools/prioritization.py (config-driven:
+# `prioritization.weights`, `prioritization.top_n`, `prioritization.benchling`).
 
 prioritization_agent = Agent(
     name="prioritization_agent",
@@ -236,8 +170,8 @@ prioritization_agent = Agent(
         "shortlist. Use rank_and_handoff to record the shortlist for "
         "experimental validation (tracked in Benchling).\n\n"
         "Note: the experimental hit/no-hit feedback loop back into screening "
-        "(see spec/therapeutic-hypothesis.md) is out of scope for this "
-        "barebone pipeline."
+        "(see spec/therapeutic-hypothesis.md) is explicitly out of scope for "
+        "this pipeline."
     ),
 )
 
@@ -260,7 +194,7 @@ if __name__ == "__main__":
     with AgentRuntime() as runtime:
         result = runtime.run(
             pipeline,
-            "Therapeutic hypothesis: inhibiting the PGRN-Sortilin complex.",
+            f"Therapeutic hypothesis: inhibiting the {CONFIG.target.gene_a}-{CONFIG.target.gene_b} complex.",
         )
         result.print_result()
 
