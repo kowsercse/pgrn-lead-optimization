@@ -26,12 +26,12 @@ Sortilin (SORT1) is the worked case.
 
 ## Status — 15 Aug, 20:50
 
-34 tests green. `pytest` from a fresh clone should pass with no network.
+52 tests green. `pytest` from a fresh clone should pass with no network.
 
 | Stage | State | Notes |
 |---|---|---|
 | 0 Foundation | **done** | store, schema, grade rules as CHECK constraints |
-| 1 Retrieval | **in progress** | dispatch + required-scout rule done; `structures` scout done |
+| 1 Retrieval | **in progress** | dispatch + required-scout rule done; both required scouts (`structures`, `bioactivity`) done |
 | 2 Verification | not started | resolver gate — the one gate PLAN.md marks non-negotiable |
 | 3 Joins | not started | |
 | 4 Answers and render | not started | |
@@ -46,7 +46,6 @@ tested offline, network only in the `fetch_*` adapters.**
 
 | Scout | Source | Named check it must implement |
 |---|---|---|
-| `bioactivity` | ChEMBL MCP, PubChem, BindingDB | report **distinct compounds**, never activity records — they differ by an order of magnitude |
 | `patents` | PubChem AIDs, patent depositions | query PubChem *and* ChEMBL; patent sets are often in one and not the other |
 | `assays` | assay descriptions | flag qHTS; count records carrying a real IC50 |
 | `literature` | Paperclip, PubMed MCP | search pathway and phenotypic aliases, not only the direct target |
