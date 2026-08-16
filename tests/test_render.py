@@ -16,15 +16,15 @@ def answers():
         Answer(1, QUESTIONS[0], "PDB 1ABC, 2.0 A.", "verified", source_id="1ABC"),
         Answer(2, QUESTIONS[1], "138 distinct compounds.", "measured"),
         Answer(3, QUESTIONS[2], "Series core present.", "measured"),
-        Answer(4, QUESTIONS[3], "106 novel, 0 overlap.", "measured", agree_n=2, agree_of=2),
+        Answer(4, QUESTIONS[3], "Most recent measurement: 2024.", "measured", agree_n=2, agree_of=2),
         Answer(5, QUESTIONS[4], "Nothing reported missing.", "measured"),
     ]
 
 
 def feas():
     return Feasibility(n_analogs=106, n_distinct_inchikeys=106, dominant_scaffold_n=106,
-                       activity_span_log=3.1, holdout_overlap=0, ligand_mw=380.0,
-                       ligand_heavy=27, best_resolution=1.9)
+                       activity_span_log=3.1, ligand_mw=380.0, ligand_heavy=27,
+                       best_resolution=1.9, latest_year=2024)
 
 
 def proposal():

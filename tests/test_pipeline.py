@@ -58,8 +58,8 @@ def conn(tmp_path):
 
 def evidence(**over):
     base = dict(series_smiles=["C" * n + "c1ccccc1" for n in range(1, 23)],
-                pchembl_values=[5.0, 8.0], holdout_overlap=0,
-                ligand_mw=380.0, ligand_heavy=27, best_resolution=2.0)
+                pchembl_values=[5.0, 8.0], ligand_mw=380.0, ligand_heavy=27,
+                best_resolution=2.0, latest_year=2024)
     return Evidence(**{**base, **over})
 
 

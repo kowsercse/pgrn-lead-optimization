@@ -31,7 +31,7 @@ SINGLETONS = ["c1ccccc1", "C1CCCCC1", "c1ccncc1", "c1ccc2ccccc2c1",
 def feas(**over):
     base = dict(
         series_smiles=CONGENERIC, pchembl_values=[5.0, 7.0, 9.0],
-        holdout_overlap=0, ligand_mw=380.0, ligand_heavy=27, best_resolution=2.0,
+        ligand_mw=380.0, ligand_heavy=27, best_resolution=2.0, latest_year=2024,
     )
     return check(**{**base, **over})
 
@@ -94,14 +94,21 @@ def test_no_values_means_no_span():
     assert f.activity_span_log == 0.0 and f.span_ok is False
 
 
-# --- holdout -------------------------------------------------------------
+# --- recency: reported, never a gate -------------------------------------
 
-def test_zero_overlap_keeps_the_time_split():
-    assert feas(holdout_overlap=0).holdout_ok is True
+def test_recent_activity_is_reported():
+    assert feas(latest_year=2024).years_since_latest is not None
 
 
-def test_any_overlap_breaks_the_time_split():
-    assert feas(holdout_overlap=1).holdout_ok is False
+def test_a_dormant_target_is_flagged_but_does_not_fail():
+    """Nobody publishing for fifteen years is a signal, not a disqualification."""
+    f = feas(latest_year=2009)
+    assert f.dormant is True
+    assert f.series_ok is True and f.span_ok is True
+
+
+def test_an_unknown_latest_year_does_not_raise():
+    assert feas(latest_year=None).dormant is False
 
 
 # --- receptor ------------------------------------------------------------
@@ -133,6 +140,7 @@ def test_every_threshold_is_reported_alongside_its_value():
     rows = feas().as_rows()
     kinds = {r["kind"] for r in rows}
     assert {"n_analogs", "dominant_scaffold_n", "activity_span_log",
-            "holdout_overlap", "best_resolution"} <= kinds
+            "best_resolution"} <= kinds
+    assert "holdout_overlap" not in kinds, "data splitting is not a tractability signal"
     for r in rows:
         assert "value" in r and "threshold" in r and "passed" in r

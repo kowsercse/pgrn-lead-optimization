@@ -1,15 +1,14 @@
 """Stage 3 exit gate: the cross-source joins.
 
-These produce the findings no single database returns. Join 2 in particular decides
-whether a prospective time split is available at all.
+These produce the findings no single database returns. Join 2 pools every source on
+canonical identity, so the same molecule reported twice is counted once.
 """
 import pytest
 
 from dossier.joins import (
-    Disjointness,
     alias_resolution,
-    holdout_disjointness,
     inchikey,
+    pool_compounds,
     record_vs_compound,
     scaffold_match,
     to_records,
@@ -37,46 +36,31 @@ def test_unparseable_smiles_yields_no_key():
     assert inchikey("not a molecule") is None
 
 
-# --- join 2: holdout disjointness ---------------------------------------
+# --- join 2: pooling every source without double-counting ---------------
 
-def test_fully_disjoint_sets_yield_all_holdout_as_novel():
-    d = holdout_disjointness(train=[BENZENE], holdout=[TOLUENE, PHENOL])
-    assert len(d.novel) == 2
-    assert d.overlap == set()
+def test_pooling_merges_sources():
+    assert len(pool_compounds([BENZENE], [TOLUENE, PHENOL])) == 3
 
 
-def test_overlap_is_detected_across_smiles_spellings():
-    """The join must not be fooled by a different traversal of the same molecule."""
-    d = holdout_disjointness(train=[ETHANOL], holdout=[ETHANOL_REVERSED, BENZENE])
-    assert len(d.overlap) == 1
-    assert len(d.novel) == 1
+def test_the_same_molecule_from_two_sources_is_counted_once():
+    """The reason pooling needs canonical identity: patent and public sets overlap."""
+    assert len(pool_compounds([ETHANOL], [ETHANOL_REVERSED])) == 1
 
 
-def test_a_holdout_wholly_inside_training_has_no_novel_members():
-    d = holdout_disjointness(train=[BENZENE, TOLUENE], holdout=[BENZENE])
-    assert d.novel == set()
-    assert len(d.overlap) == 1
+def test_pooling_a_source_with_itself_changes_nothing():
+    assert len(pool_compounds([BENZENE, TOLUENE], [BENZENE])) == 2
 
 
-def test_novel_and_overlap_partition_the_holdout():
-    d = holdout_disjointness(train=[BENZENE], holdout=[BENZENE, TOLUENE, PHENOL])
-    assert len(d.novel) + len(d.overlap) == 3
-    assert d.novel & d.overlap == set()
+def test_pooling_skips_unparseable_entries():
+    assert len(pool_compounds([BENZENE], ["garbage"])) == 1
 
 
-def test_unparseable_entries_are_skipped_not_counted_as_novel():
-    d = holdout_disjointness(train=[BENZENE], holdout=[TOLUENE, "garbage"])
-    assert len(d.novel) == 1
+def test_pooling_no_sources_is_empty():
+    assert pool_compounds() == set()
 
 
-def test_empty_holdout_is_not_an_error():
-    d = holdout_disjointness(train=[BENZENE], holdout=[])
-    assert d.novel == set() and d.overlap == set()
-
-
-def test_duplicates_within_the_holdout_collapse():
-    d = holdout_disjointness(train=[], holdout=[TOLUENE, TOLUENE, TOLUENE])
-    assert len(d.novel) == 1
+def test_duplicates_within_one_source_collapse():
+    assert len(pool_compounds([TOLUENE, TOLUENE, TOLUENE])) == 1
 
 
 # --- join 1: scaffold match ---------------------------------------------
@@ -144,21 +128,19 @@ def test_alias_lookup_failure_degrades_to_the_target_alone():
 def test_each_join_writes_one_row(tmp_path):
     conn = connect(tmp_path / "j.db")
     run = new_run(conn, target="X")
-    d = holdout_disjointness(train=[BENZENE], holdout=[TOLUENE])
-    to_records(conn, run, disjointness=d, scaffold_matched=True,
-               aliases=["X"], counts=(400, 138, True))
+    to_records(conn, run, pooled=pool_compounds([BENZENE], [TOLUENE]),
+               scaffold_matched=True, aliases=["X"], counts=(400, 138, True))
     rows = conn.execute("SELECT kind FROM join_result WHERE run_id = ?", (run,)).fetchall()
     assert sorted(r["kind"] for r in rows) == [
-        "alias_resolution", "holdout_disjointness", "record_vs_compound", "scaffold_match",
+        "alias_resolution", "pooled_compounds", "record_vs_compound", "scaffold_match",
     ]
 
 
 def test_join_records_are_graded_measured(tmp_path):
     conn = connect(tmp_path / "j.db")
     run = new_run(conn, target="X")
-    d = holdout_disjointness(train=[BENZENE], holdout=[TOLUENE])
-    records = to_records(conn, run, disjointness=d, scaffold_matched=True,
-                         aliases=["X"], counts=(400, 138, True))
+    records = to_records(conn, run, pooled=pool_compounds([BENZENE], [TOLUENE]),
+                         scaffold_matched=True, aliases=["X"], counts=(400, 138, True))
     assert records
     for r in records:
         assert r.grade == "measured"

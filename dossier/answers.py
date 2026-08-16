@@ -18,7 +18,7 @@ QUESTIONS: tuple[str, ...] = (
     "Is there a pocket, and which structure do we design against?",
     "What chemical matter exists, and how good is it?",
     "Is there a congeneric series?",
-    "What can serve as a held-out validation set?",
+    "Is anyone still working on this target?",
     "What is missing?",
 )
 
@@ -79,10 +79,17 @@ def _matter(records: Sequence[Record]) -> Answer:
     if distinct is None:
         return Answer(2, QUESTIONS[1],
                       "No measured bioactivity was retrieved.", "unverified")
-    value = f"{distinct.value} distinct compounds with measured activity"
-    if total is not None:
-        value += f", drawn from {total.value} activity records"
-    value += "."
+    pooled = _claim(records, "pooled chemical matter")
+    if pooled is not None:
+        value = f"{pooled.value}, pooled across every source"
+        if distinct is not None:
+            value += f" ({distinct.value} from the public measurement set)"
+        value += "."
+    else:
+        value = f"{distinct.value} distinct compounds with measured activity"
+        if total is not None:
+            value += f", drawn from {total.value} activity records"
+        value += "."
     if potency is not None:
         value += f" Potency {potency.value}."
     return Answer(2, QUESTIONS[1], value, _floor(distinct.grade, distinct, potency))
@@ -102,12 +109,19 @@ def _series(records: Sequence[Record]) -> Answer:
                   "unverified")
 
 
-def _holdout(records: Sequence[Record]) -> Answer:
-    joined = _claim(records, "holdout disjointness")
-    if joined is None:
+def _recency(records: Sequence[Record]) -> Answer:
+    """Reported, never a gate. Silence is a signal about the field, not evidence
+    that the protein is intractable. See DESIGN.md D8."""
+    pooled = _claim(records, "pooled chemical matter")
+    latest = _claim(records, "most recent measurement")
+    if latest is None:
         return Answer(4, QUESTIONS[3],
-                      "No candidate held-out set was identified.", "unverified")
-    return Answer(4, QUESTIONS[3], joined.value + ".", _floor(joined.grade, joined))
+                      "The date of the most recent measurement was not retrieved.",
+                      "unverified")
+    value = f"Most recent measurement: {latest.value}."
+    if pooled is not None:
+        value += f" {pooled.value}."
+    return Answer(4, QUESTIONS[3], value, _floor(latest.grade, latest, pooled))
 
 
 def _missing(records: Sequence[Record], gaps: Sequence[Gap], verdict: str | None) -> Answer:
@@ -137,7 +151,7 @@ def compose(
         _receptor(records),
         _matter(records),
         _series(records),
-        _holdout(records),
+        _recency(records),
         _missing(records, gaps, verdict),
     ]
     if agreement:

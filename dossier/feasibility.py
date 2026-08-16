@@ -31,6 +31,11 @@ MIN_LIGAND_HEAVY = 15
 RESOLUTION_DESIGN = 2.5
 RESOLUTION_TRIAGE = 3.5
 
+# Reported alongside the checks, never gating: a target nobody has published on for
+# this long is worth flagging, but silence is not evidence the protein is intractable.
+CURRENT_YEAR = 2026
+DORMANT_YEARS = 10
+
 
 def murcko(smiles: str) -> str | None:
     mol = Chem.MolFromSmiles(smiles)
@@ -54,10 +59,10 @@ class Feasibility:
     n_distinct_inchikeys: int
     dominant_scaffold_n: int
     activity_span_log: float
-    holdout_overlap: int
     ligand_mw: float | None
     ligand_heavy: int | None
     best_resolution: float | None
+    latest_year: int | None = None
 
     # --- derived verdicts ---
 
@@ -74,8 +79,15 @@ class Feasibility:
         return self.activity_span_log >= MIN_SPAN_LOG
 
     @property
-    def holdout_ok(self) -> bool:
-        return self.holdout_overlap == 0
+    def years_since_latest(self) -> int | None:
+        """Reported, never a gate. Whether anyone is still working on a target is a
+        signal worth surfacing; it is not evidence about the protein itself."""
+        return None if self.latest_year is None else CURRENT_YEAR - self.latest_year
+
+    @property
+    def dormant(self) -> bool:
+        gap = self.years_since_latest
+        return gap is not None and gap >= DORMANT_YEARS
 
     @property
     def ligand_ok(self) -> bool:
@@ -109,8 +121,6 @@ class Feasibility:
              "passed": self.dominant_scaffold_n >= MIN_DOMINANT_SCAFFOLD},
             {"kind": "activity_span_log", "value": self.activity_span_log,
              "threshold": MIN_SPAN_LOG, "passed": self.span_ok},
-            {"kind": "holdout_overlap", "value": float(self.holdout_overlap),
-             "threshold": 0.0, "passed": self.holdout_ok},
             {"kind": "ligand_mw", "value": self.ligand_mw or 0.0,
              "threshold": MIN_LIGAND_MW, "passed": self.ligand_ok},
             {"kind": "best_resolution",
@@ -123,10 +133,10 @@ def check(
     *,
     series_smiles: Sequence[str],
     pchembl_values: Sequence[float],
-    holdout_overlap: int,
     ligand_mw: float | None,
     ligand_heavy: int | None,
     best_resolution: float | None,
+    latest_year: int | None = None,
 ) -> Feasibility:
     keys = {k for k in (inchikey(s) for s in series_smiles) if k is not None}
     _, dominant_n = dominant_scaffold(series_smiles)
@@ -136,8 +146,8 @@ def check(
         n_distinct_inchikeys=len(keys),
         dominant_scaffold_n=dominant_n,
         activity_span_log=span,
-        holdout_overlap=holdout_overlap,
         ligand_mw=ligand_mw,
         ligand_heavy=ligand_heavy,
         best_resolution=best_resolution,
+        latest_year=latest_year,
     )

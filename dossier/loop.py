@@ -21,7 +21,6 @@ from .feasibility import (
 )
 
 BRANCHES = (
-    "scaffold_split",   # validation claim narrows
     "not_ready",        # recommendation reverses
     "no_structure",     # recommendation reverses
     "triage_only",      # recommendation is qualified
@@ -62,15 +61,9 @@ def next_step(f: Feasibility, handoff: Handoff) -> Proposal:
     """Nothing here names a target. Every identifier comes from `handoff`."""
     failed = tuple(r["kind"] for r in f.as_rows() if not r["passed"])
 
-    # Overlap narrows the validation claim; it does not condemn the target, so it is
-    # reported before series problems rather than after.
-    if not f.holdout_ok:
-        return Proposal(
-            "scaffold_split",
-            "Withdraw the time-split claim — the holdout is not disjoint from training. "
-            f"Hand off with a scaffold split instead: {handoff.spec()}.",
-            failed,
-        )
+    # How a future model would be validated is a planning detail for whoever picks
+    # the work up. It says nothing about whether this protein is tractable, so it is
+    # not a branch condition. See DESIGN.md D8.
 
     if not f.series_ok:
         why = (

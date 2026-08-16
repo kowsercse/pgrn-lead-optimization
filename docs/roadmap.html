@@ -194,8 +194,8 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
     <!-- row 2 -->
     <text x="40" y="230" font-size="12.5">holdout overlap &gt; 0</text>
     <line x1="292" y1="226" x2="320" y2="226" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
-    <text x="330" y="224" font-size="12.5" fill="var(--accent)">Withdraw the time-split claim. Hand off with a</text>
-    <text x="330" y="240" font-size="12.5" fill="var(--accent)">scaffold split instead.</text>
+    <text x="330" y="224" font-size="12.5" fill="var(--accent)">Re-check how the compound sources merged;</text>
+    <text x="330" y="240" font-size="12.5" fill="var(--accent)">the pooled count looks wrong.</text>
     <rect x="754" y="212" width="106" height="22" rx="2" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
     <text x="807" y="227" font-size="10.5" text-anchor="middle" fill="var(--accent)" font-family="ui-monospace, Menlo, monospace">changed</text>
     <line x1="40" y1="260" x2="860" y2="260" stroke="currentColor" stroke-width="1" opacity=".18"/>
@@ -214,6 +214,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
     <text x="40" y="374" font-size="11.5" font-style="italic">Two of the three rows overturn what it committed to.</text>
   </g>
 </svg><figcaption>Read it top to bottom. The agent writes the boxed commitment first, before it can see any of the numbers. The five checks then run, and two of the three possible outcomes overturn what it committed to — one narrows the validation claim, the other reverses the recommendation entirely. The right-hand column names the effect so the change is legible without re-reading the top box.</figcaption></figure>
+<p><strong>Data splitting is deliberately absent.</strong> Whether a future model could be cleanly validated is a planning detail for whoever picks the work up; it says nothing about whether this protein is tractable, and partitioning the molecules makes the target look thinner than it is. All sources are pooled on canonical identity instead. See <code>DESIGN.md</code> D8.</p>
 <p><strong>Why these checks and not a structure-based calculation.</strong> Docking, free-energy methods and molecular dynamics are all out of scope — no GPU budget. But the loop does not need them. It needs a measurement the agent has not already seen, and the feasibility checks are exactly that: the assessment commits first, the numbers are computed second, and they can contradict it. All five run in RDKit on a laptop in seconds.</p>
 <div class="scroll"><table>
 <thead>
@@ -224,11 +225,6 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>Holdout disjointness</td>
-<td>InChIKey set difference, train vs holdout</td>
-<td>Overlap &gt; 0 — the time-split claim fails</td>
-</tr>
 <tr>
 <td>Series size and scaffold diversity</td>
 <td>Murcko scaffolds over the retrieved series</td>
@@ -243,6 +239,11 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <td>Receptor ligand quality</td>
 <td>MW and heavy-atom count of the bound ligand</td>
 <td>Below drug-like — the pocket is defined by a fragment or an additive</td>
+</tr>
+<tr>
+<td>Field activity</td>
+<td>Date of the most recent measurement</td>
+<td>Reported only — never changes the recommendation</td>
 </tr>
 <tr>
 <td>Structure resolution</td>
@@ -450,33 +451,33 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 
         <line x1="14" y1="176" x2="886" y2="176" stroke="currentColor" opacity=".2"/>
 
-        <text x="14" y="204" font-size="11" font-family="ui-monospace, Menlo, monospace" opacity=".6">JOIN 2 — SET DIFFERENCE ON INCHIKEY</text>
+        <text x="14" y="204" font-size="11" font-family="ui-monospace, Menlo, monospace" opacity=".6">JOIN 2 — POOL SOURCES ON INCHIKEY</text>
 
         <rect x="14" y="218" width="222" height="50" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
-        <text x="28" y="239" font-size="11.5">ChEMBL, published ≤ 2020</text>
-        <text x="28" y="256" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">CHEMBL3091 + CHEMBL4680051</text>
+        <text x="28" y="239" font-size="11.5">public measured set</text>
+        <text x="28" y="256" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">ChEMBL</text>
 
         <rect x="14" y="278" width="222" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
-        <text x="28" y="297" font-size="11.5">PubChem AID 2202264</text>
-        <text x="28" y="313" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">106 cpds · priority Sep 2021</text>
+        <text x="28" y="297" font-size="11.5">patent-deposited set</text>
+        <text x="28" y="313" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">additional compounds</text>
 
         <circle cx="330" cy="270" r="27" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
-        <text x="330" y="276" text-anchor="middle" font-size="14" fill="var(--accent)">∖</text>
+        <text x="330" y="276" text-anchor="middle" font-size="14" fill="var(--accent)">∪</text>
 
         <rect x="416" y="242" width="250" height="58" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="432" y="266" fill="var(--accent)" font-size="11.5">Prospective holdout,</text>
-        <text x="432" y="284" fill="var(--accent)" font-size="11.5">verified disjoint</text>
+        <text x="432" y="266" fill="var(--accent)" font-size="11.5">One pooled set,</text>
+        <text x="432" y="284" fill="var(--accent)" font-size="11.5">no double-counting</text>
 
         <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#b1)">
           <path d="M236,243 C280,243 280,258 300,263"/>
           <path d="M236,300 C280,300 280,282 300,277"/>
           <line x1="357" y1="270" x2="410" y2="270"/>
         </g>
-        <text x="700" y="266" font-size="11" opacity=".7">a time split, not a random</text>
-        <text x="700" y="282" font-size="11" opacity=".7">or scaffold split</text>
+        <text x="700" y="266" font-size="11" opacity=".7">every source counted, none</text>
+        <text x="700" y="282" font-size="11" opacity=".7">counted twice</text>
       </g>
-    </svg><figcaption>Both joins cross sources that no one query spans. The first pairs a patent's chemical claim against a structure database's ligand chemistry, yielding a receptor matched to the chemotype being scored. The second subtracts one compound set from another on canonical identifiers, yielding a validation set separated by publication date. Neither appears in any single database's output, and both changed the downstream plan.</figcaption></figure>
-<p>Join 2 yields a time split, not a random or scaffold split. Two more joins belong in the same stage. <strong>Alias resolution</strong> catches series filed against pathway or phenotypic identifiers. <strong>Record-versus-compound reconciliation</strong> corrects the counting error above; it already caused one correction in the reference run.</p>
+    </svg><figcaption>Both joins cross sources that no one query spans. The first pairs a patent's chemical claim against a structure database's ligand chemistry, yielding a receptor matched to the chemotype being scored. The second merges every compound source on canonical identifiers, so the same molecule reported by two databases is counted once. Neither appears in any single database's output.</figcaption></figure>
+<p>Join 2 pools rather than partitions. All measured molecules are evidence of chemical matter wherever they were deposited; canonical identity is what stops double-counting. Two more joins belong in the same stage. <strong>Alias resolution</strong> catches series filed against pathway or phenotypic identifiers. <strong>Record-versus-compound reconciliation</strong> corrects the counting error above; it already caused one correction in the reference run.</p>
 <h2 id="5-grading-and-the-resolver-gate">5. Grading and the resolver gate</h2>
 <div class="scroll"><table>
 <thead>

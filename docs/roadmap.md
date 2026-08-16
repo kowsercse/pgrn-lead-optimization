@@ -50,6 +50,12 @@ run over the retrieved data, and the result rewrites the recommendation.
 
 *Read it top to bottom. The agent writes the boxed commitment first, before it can see any of the numbers. The five checks then run, and two of the three possible outcomes overturn what it committed to — one narrows the validation claim, the other reverses the recommendation entirely. The right-hand column names the effect so the change is legible without re-reading the top box.*
 
+**Data splitting is deliberately absent.** Whether a future model could be cleanly
+validated is a planning detail for whoever picks the work up; it says nothing about
+whether this protein is tractable, and partitioning the molecules makes the target look
+thinner than it is. All sources are pooled on canonical identity instead. See
+`DESIGN.md` D8.
+
 **Why these checks and not a structure-based calculation.** Docking, free-energy methods
 and molecular dynamics are all out of scope — no GPU budget. But the loop does not need
 them. It needs a measurement the agent has not already seen, and the feasibility checks
@@ -58,10 +64,10 @@ can contradict it. All five run in RDKit on a laptop in seconds.
 
 | Check | Computed from | Flips the recommendation when |
 |---|---|---|
-| Holdout disjointness | InChIKey set difference, train vs holdout | Overlap > 0 — the time-split claim fails |
 | Series size and scaffold diversity | Murcko scaffolds over the retrieved series | One scaffold, or fewer than ~20 analogs — SAR reasoning is unsupportable |
 | Activity range | max/min pActivity in the series | Span < 2 log units — nothing to rank |
 | Receptor ligand quality | MW and heavy-atom count of the bound ligand | Below drug-like — the pocket is defined by a fragment or an additive |
+| Field activity | Date of the most recent measurement | Reported only — never changes the recommendation |
 | Structure resolution | Resolution and method of the recommended entry | Worse than 2.5 Å — usable for triage and shape work, not for structure-guided optimisation |
 
 To show the loop responds to evidence rather than to prompting, run it twice: once on
@@ -90,12 +96,13 @@ between them, the loop is decorative and should be reported as such.**
 
 ![The two cross-source joins, with their real identifiers](figures/joins.svg)
 
-*Both joins cross sources that no one query spans. The first pairs a patent's chemical claim against a structure database's ligand chemistry, yielding a receptor matched to the chemotype being scored. The second subtracts one compound set from another on canonical identifiers, yielding a validation set separated by publication date. Neither appears in any single database's output, and both changed the downstream plan.*
+*Both joins cross sources that no one query spans. The first pairs a patent's chemical claim against a structure database's ligand chemistry, yielding a receptor matched to the chemotype being scored. The second merges every compound source on canonical identifiers, so the same molecule reported by two databases is counted once. Neither appears in any single database's output.*
 
-Join 2 yields a time split, not a random or scaffold split. Two more joins belong in
-the same stage. **Alias resolution** catches series filed against
-pathway or phenotypic identifiers. **Record-versus-compound reconciliation** corrects
-the counting error above; it already caused one correction in the reference run.
+Join 2 pools rather than partitions. All measured molecules are evidence of chemical
+matter wherever they were deposited; canonical identity is what stops double-counting.
+Two more joins belong in the same stage. **Alias resolution** catches series filed
+against pathway or phenotypic identifiers. **Record-versus-compound reconciliation**
+corrects the counting error above; it already caused one correction in the reference run.
 
 ## 5. Grading and the resolver gate
 

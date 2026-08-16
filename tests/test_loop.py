@@ -14,8 +14,8 @@ from dossier.loop import BRANCHES, Handoff, next_step
 def f(**over):
     """A feasibility that passes everything, overridden per case."""
     base = dict(n_analogs=106, n_distinct_inchikeys=106, dominant_scaffold_n=106,
-                activity_span_log=3.1, holdout_overlap=0, ligand_mw=380.0,
-                ligand_heavy=27, best_resolution=1.9)
+                activity_span_log=3.1, ligand_mw=380.0, ligand_heavy=27,
+                best_resolution=1.9, latest_year=2024)
     return Feasibility(**{**base, **over})
 
 
@@ -26,7 +26,6 @@ HANDOFF = Handoff(receptor="1ABC", fallback_receptor="2DEF", site_ligand="LIG",
 # --- the seven-case branch table (DESIGN.md D3) --------------------------
 
 CASES = [
-    ("holdout overlaps",        dict(holdout_overlap=1),             "scaffold_split"),
     ("series too small",        dict(n_analogs=12, n_distinct_inchikeys=12,
                                      dominant_scaffold_n=12),        "not_ready"),
     ("series is duplicates",    dict(n_distinct_inchikeys=1),        "not_ready"),
@@ -59,10 +58,9 @@ def test_the_reference_case_proceeds_rather_than_failing():
 
 # --- ordering ------------------------------------------------------------
 
-def test_holdout_overlap_is_reported_before_series_problems():
-    """Overlap narrows the validation claim; it does not condemn the target."""
-    got = next_step(f(holdout_overlap=1, activity_span_log=0.8), HANDOFF)
-    assert got.branch == "scaffold_split"
+def test_data_splitting_never_changes_the_recommendation():
+    """Whether a future model can be validated says nothing about the target."""
+    assert next_step(f(), HANDOFF).branch == "proceed"
 
 
 def test_a_fragment_site_is_not_a_usable_structure():
@@ -87,11 +85,6 @@ def test_the_proposal_names_no_target_it_was_not_given():
 def test_a_reversed_recommendation_says_what_to_do_instead():
     got = next_step(f(dominant_scaffold_n=2), HANDOFF)
     assert "ligand-based" in got.recommendation.lower()
-
-
-def test_scaffold_split_withdraws_the_time_split_claim():
-    got = next_step(f(holdout_overlap=3), HANDOFF)
-    assert "scaffold split" in got.recommendation.lower()
 
 
 def test_every_proposal_carries_the_checks_that_decided_it():

@@ -26,7 +26,7 @@ flowchart TD
 
     RES --> JOINS["joins.py"]
     JOINS --> J1["scaffold_match<br/>RDKit substructure"]
-    JOINS --> J2["holdout_disjointness<br/>InChIKey, returns novel + overlap"]
+    JOINS --> J2["pool_compounds<br/>merge sources, dedupe on InChIKey"]
     JOINS --> J3["alias_resolution"]
     JOINS --> J4["record_vs_compound"]
 
@@ -37,7 +37,7 @@ flowchart TD
 
     ANS --> REP["replicate.py<br/>answer 1 only, n=2"]
     REP --> RENDER["render.py<br/>dossier v1"]
-    RENDER --> CHK["feasibility.py<br/>8 checks, RDKit only"]
+    RENDER --> CHK["feasibility.py<br/>deterministic checks, RDKit only"]
     CHK --> LOOP["loop.py<br/>branch on check results"]
     LOOP --> RENDER
 
@@ -182,7 +182,7 @@ sequenceDiagram
     R->>DB: insert RESOLUTION, demote on failure
 
     J->>DB: select resolved RECORDs
-    J->>J: scaffold_match, holdout_disjointness, alias, record_vs_compound
+    J->>J: scaffold_match, pool_compounds, alias, record_vs_compound
     J->>DB: insert JOIN_RESULTs
 
     CLI->>DB: compose five ANSWERs + GAPs
@@ -208,7 +208,6 @@ stateDiagram-v2
     Evaluate --> NoStructure : resolution > 3.5 A
     Evaluate --> TriageOnly : resolution > 2.5 A
     Evaluate --> Proceed : all checks pass
-    ScaffoldSplit --> DossierV2
     NotReady --> DossierV2
     NoStructure --> DossierV2
     TriageOnly --> DossierV2
@@ -220,6 +219,9 @@ stateDiagram-v2
         the agent did not produce.
     end note
 ```
+
+Data splitting is deliberately absent: whether a future model could be validated
+says nothing about whether this protein is tractable. See `DESIGN.md` D8.
 
 "Thin series" is `n_analogs < 20`, `n_distinct_inchikeys != n_analogs`, or
 `dominant_scaffold_n < 15`. Scaffold *count* is not a criterion — a congeneric series

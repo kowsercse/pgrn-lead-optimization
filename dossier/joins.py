@@ -4,8 +4,8 @@ Any one query returns a list. The value is in the joins between sources:
 
   1. scaffold_match       a patent series' core against a structure's bound ligand,
                           yielding a receptor matched to the chemotype being scored
-  2. holdout_disjointness one compound set subtracted from another on canonical
-                          identifiers, yielding a validation set separated by date
+  2. pool_compounds       every source merged on canonical identity, so the same
+                          molecule reported by two databases is not counted twice
   3. alias_resolution     series filed against pathway or phenotypic identifiers
                           rather than the molecular target
   4. record_vs_compound   activity-record counts reconciled against distinct compounds
@@ -28,12 +28,6 @@ from .store import Record
 RDLogger.DisableLog("rdApp.*")  # unparseable input is data, not a program error
 
 
-@dataclass(frozen=True)
-class Disjointness:
-    novel: set[str]      # holdout \ train — members absent from training
-    overlap: set[str]    # train ∩ holdout — members present in both
-
-
 def inchikey(smiles: str) -> str | None:
     """Canonical identity. Two spellings of one molecule must collapse to one key."""
     mol = Chem.MolFromSmiles(smiles)
@@ -44,13 +38,18 @@ def _keys(smiles: Iterable[str]) -> set[str]:
     return {k for k in (inchikey(s) for s in smiles) if k is not None}
 
 
-def holdout_disjointness(
-    train: Iterable[str], holdout: Iterable[str]
-) -> Disjointness:
-    """Join 2. Both operands normalised to InChIKey before comparison, so a different
-    SMILES traversal of the same molecule is not mistaken for a novel compound."""
-    t, h = _keys(train), _keys(holdout)
-    return Disjointness(novel=h - t, overlap=h & t)
+def pool_compounds(*sources: Iterable[str]) -> set[str]:
+    """Join 2. Merge every source on canonical identity.
+
+    All measured molecules are evidence of chemical matter, wherever they were
+    deposited, so they are pooled rather than partitioned. Canonical identity is what
+    stops the same molecule — reported by two databases under different SMILES — from
+    being counted twice and flattering the target.
+    """
+    pooled: set[str] = set()
+    for source in sources:
+        pooled |= _keys(source)
+    return pooled
 
 
 def scaffold_match(series_core_smiles: str, ligand_smiles: str) -> bool:
@@ -93,7 +92,7 @@ def to_records(
     conn: sqlite3.Connection,
     run_id: str,
     *,
-    disjointness: Disjointness,
+    pooled: set[str],
     scaffold_matched: bool,
     aliases: Sequence[str],
     counts: tuple[int, int, bool],
@@ -101,9 +100,9 @@ def to_records(
     """Persist one `join_result` row per join and return the dossier records."""
     n_records, n_distinct, conflated = counts
     findings = [
-        ("holdout_disjointness",
-         f"{len(disjointness.novel)} novel, {len(disjointness.overlap)} overlap",
-         "holdout disjointness"),
+        ("pooled_compounds",
+         f"{len(pooled)} distinct molecules across all sources",
+         "pooled chemical matter"),
         ("scaffold_match",
          "series core is present in the receptor ligand" if scaffold_matched
          else "series core is absent from the receptor ligand",

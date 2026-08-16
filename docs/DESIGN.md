@@ -230,6 +230,55 @@ failure mode: a pipeline consuming its own broken analysis without noticing.
 
 ---
 
+## D8 — Data splitting is not a tractability signal
+
+**Problem.** The design used "is a clean held-out set available" as a feasibility check
+and as a loop branch. It is neither.
+
+The dossier answers one question: is this protein tractable for structure-based design.
+Whether a *future* model could be cleanly validated is a planning detail for whoever
+picks the work up. A target with 200 well-measured molecules and a 1.8 Å structure is an
+excellent candidate whether or not the data partitions neatly.
+
+Worse, partitioning actively harms the assessment. Every measured molecule is evidence
+of chemical matter, so splitting them makes the target look thinner than it is.
+
+Two further weaknesses in the original criterion. It split on *which database holds the
+data* rather than on anything scientific — a curation accident. And that property is
+unstable: ChEMBL ingests patent-derived data over releases, so "absent from ChEMBL"
+silently expires.
+
+**Options.**
+
+| | Approach | Verdict |
+|---|---|---|
+| A | Keep the check, split on date rather than database | Rejected — still answers a question the dossier is not asking |
+| B | Drop the check; pool all sources for the count | **Adopted** |
+| C | Drop it entirely and report nothing about time | Rejected — recency is a real signal, just not this one |
+
+**Decision.** Remove data splitting from the checks and from the loop. Pool every source
+on canonical identity for the chemical-matter count. Report recency separately, and never
+as a gate.
+
+- `holdout_disjointness` is replaced by `pool_compounds(*sources)`, which merges sources
+  and deduplicates on InChIKey. The same canonicalisation, serving the correct purpose:
+  the same molecule reported by two databases must not be counted twice.
+- `Feasibility.holdout_overlap` is deleted, taking the checks from five to four.
+- The `scaffold_split` branch is deleted, taking the outcomes from five to four.
+- `Feasibility.latest_year` is added, with `years_since_latest` and `dormant` — reported
+  in the dossier, never consulted by `next_step`.
+- Dossier question 4 changes from *"what can serve as a held-out validation set"* to
+  *"is anyone still working on this target"*.
+
+**Consequence.** The prospective-validation claim, one of the two headline claims the
+project was built around, is withdrawn. It was evidence about our methodology, not about
+the target, and it did not belong in the target's dossier.
+
+**Risk accepted.** `DORMANT_YEARS = 10` is a judgement with no published basis, which is
+exactly why it reports rather than gates.
+
+---
+
 ## Vestigial rules
 
 Three `MUST NOT` entries govern excluded tooling. Move to a note under EXCLUDED:

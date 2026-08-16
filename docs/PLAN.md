@@ -20,10 +20,10 @@ stage gate.
 | 0 | Foundation | Sat 17:30–18:30 | 60 | Schema rejects a malformed grade |
 | 1 | Retrieval | Sat 18:30–20:50 | 140 | Five scouts return; killing one yields a gap |
 | 2 | Verification | Sat 20:50–22:50 | 120 | Fabricated accession is demoted and flagged |
-| 3 | Joins | Sat 22:50–00:20 | 90 | Disjointness returns 106 novel, 0 overlap |
+| 3 | Joins | Sat 22:50–00:20 | 90 | Pooling merges sources without double-counting |
 | 4 | Answers and render | Sun 00:20–02:00 | 100 | Dossier v1 opens with no network |
 | — | *Sleep* | Sun 02:00–07:00 | 300 | — |
-| 5 | Feasibility and loop | Sun 07:00–09:05 | 125 | All seven branches reachable |
+| 5 | Feasibility and loop | Sun 07:00–09:05 | 125 | All four outcomes reachable |
 | 6 | Audit and cold run | Sun 09:05–09:35 | 30 | Grep clean; CTSL completes |
 | — | Freeze, rehearse | Sun 09:35–10:15 | 40 | Two timed run-throughs |
 | — | Submit | Sun 10:15–10:45 | 30 | — |
@@ -143,19 +143,17 @@ If it fails, stop and fix rather than proceeding.
 
 ## Stage 3 — Joins
 
-**Window** Sat 22:50–00:20 · 90 min · Applies D4
+**Window** Sat 22:50–00:20 · 90 min · Applies D8
 
 ### Tasks
 
-1. **`holdout_disjointness`** (25 min) — D4, replacing `set_difference`.
+1. **`pool_compounds`** (25 min) — D8. Merge every source on canonical identity.
    ```python
-   @dataclass(frozen=True)
-   class Disjointness:
-       novel: set[str]     # holdout \ train
-       overlap: set[str]   # train ∩ holdout
-   def holdout_disjointness(train, holdout) -> Disjointness
+   def pool_compounds(*sources: Iterable[str]) -> set[str]
    ```
-   Both operands normalised to InChIKey before comparison.
+   All measured molecules are evidence of chemical matter wherever they were deposited,
+   so they are pooled rather than partitioned. Canonicalisation stops the same molecule,
+   reported by two databases under different SMILES, from being counted twice.
 
 2. **`scaffold_match`** (20 min) — RDKit substructure, patent core against co-crystal ligand.
 
@@ -169,7 +167,7 @@ Each join writes one `join_result` row.
 
 ### Exit gate
 
-- `len(d.novel) == 106` and `len(d.overlap) == 0` on the SORT1 fixture
+- pooling the public set with the patent set yields more than either alone, and fewer than their sum
 - `scaffold_match` true for the SORT1 core/UP4 pair, false for an unrelated ligand
 - Four `join_result` rows written per run
 
@@ -188,7 +186,7 @@ carry the demo.
    a candidate list.
 
 2. **Replication** (15 min) — D2. `REPLICATES = 2`, **answer 1 only**. Answer 4 is a
-   deterministic set operation; replicating it measures nothing.
+   date lookup; replicating it measures nothing.
 
 3. **Renderer** (50 min) — six sections in order: answers, contradictions, gap list,
    recommendation and failure condition, hand-off spec, cost line. Gap section renders when
@@ -222,7 +220,6 @@ gap list and the expand-a-claim interaction are the inspectability criterion.
    n_distinct_inchikeys == n_analogs
    dominant_scaffold_n  >= 15
    activity_span_log    >= 2.0
-   holdout_overlap      == 0
    ligand_mw            >= 250
    ligand_heavy         >= 15
    best_resolution      <= 2.5  (design) / <= 3.5 (triage)
@@ -230,7 +227,7 @@ gap list and the expand-a-claim interaction are the inspectability criterion.
    One `check_result` row per check.
 
 2. **Branch table** (35 min) — D3. Seven cases over the pure `next_step(f, a)`, asserting
-   every branch reachable. Deterministic, offline, under one second.
+   every one of the four outcomes reachable. Deterministic, offline, under one second.
 
 3. **Loop and dossier v2** (45 min) — regenerate with the revised recommendation and the
    hand-off spec: receptor, resolution, method, site origin, train accession, holdout
@@ -238,9 +235,9 @@ gap list and the expand-a-claim interaction are the inspectability criterion.
 
 ### Exit gate
 
-- SORT1 fixture: `holdout_overlap` 0, `dominant_scaffold_n` 106, `activity_span_log` ≥ 2
+- SORT1 fixture: `dominant_scaffold_n` 106, `activity_span_log` ≥ 2
 - **SORT1 produces `triage_only`, not `not_ready`** — this is defect 1's regression test
-- All seven branch cases assert reachable
+- All four outcomes assert reachable
 - Dossier v2 differs from v1 in recommendation text on at least one constructed case
 
 **This stage carries judging criterion 1.** Protect it. If Stage 4 overruns, cut from

@@ -33,10 +33,10 @@ class Evidence:
     absent when the scouts could not supply it."""
     series_smiles: Sequence[str]
     pchembl_values: Sequence[float]
-    holdout_overlap: int
     ligand_mw: float | None
     ligand_heavy: int | None
     best_resolution: float | None
+    latest_year: int | None = None
 
 
 @dataclass(frozen=True)
@@ -102,7 +102,7 @@ def run_pipeline(
         "tool_calls": float(len(records) + resolved.fetches),
         "wall_clock_s": time.monotonic() - started,
     }
-    placeholder = Feasibility(0, 0, 0, 0.0, 0, None, None, None)
+    placeholder = Feasibility(0, 0, 0, 0.0, None, None, None)
     v1 = out_dir / f"dossier_{target}_v1.html"
     v1.write_text(render(target=target, answers=answers,
                          proposal=Proposal("pending", "Checks not yet computed."),
@@ -119,10 +119,10 @@ def run_pipeline(
         feasibility = check(
             series_smiles=evidence.series_smiles,
             pchembl_values=evidence.pchembl_values,
-            holdout_overlap=evidence.holdout_overlap,
             ligand_mw=evidence.ligand_mw,
             ligand_heavy=evidence.ligand_heavy,
             best_resolution=evidence.best_resolution,
+            latest_year=evidence.latest_year,
         )
         conn.executemany(
             "INSERT INTO check_result "

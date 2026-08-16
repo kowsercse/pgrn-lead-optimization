@@ -1,5 +1,10 @@
 # Analysis — SPEC.md
 
+> **Superseded in part.** Defect 4 below concerns `set_difference`, which was used to
+> check a data split. That split was later removed entirely — it answered a question the
+> dossier is not asking. See `DESIGN.md` D8. The defect was real; the function it
+> described no longer exists.
+
 Review of `SPEC.md` as of 15 Aug 2026. Seven defects, three of them blocking. Numbers
 below are computed from the spec's own values.
 

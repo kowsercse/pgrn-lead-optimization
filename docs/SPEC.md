@@ -25,8 +25,8 @@
   - Series usable for SAR: `n_distinct_inchikeys` == `n_analogs`
   - Series usable for SAR: `dominant_scaffold_n` >= 15
   - Series usable for ranking: `activity_span_log` >= 2.0
-  - Time split valid: `holdout_overlap` == 0
   - Congeneric series: >= 80% share one Murcko scaffold — descriptive only, never a gate
+  - Dormant field: no measurement in >= 10 years — descriptive only, never a gate
   - Design-quality structure: resolution <= 2.5 Å
   - Triage-quality structure: resolution <= 3.5 Å
   - Experimental structure required: X-ray or cryo-EM with ligand density
@@ -35,8 +35,7 @@
   - Receptor and fallback receptor — from `structures`
   - Box-defining ligand — from `structures`
   - Training set accessions — from `bioactivity`
-  - Training cutoff date — from the holdout's priority date
-  - Holdout accession and size — from `patents`
+  - Additional compound sources — from `patents`, pooled with the public set
   - Series core scaffold — from `joins.scaffold_match`
   - Second target — operator argument
 
@@ -49,11 +48,9 @@
   - Expected recommendation qualifier: triage-only
   - Expected site-defining ligand: UP4
   - Expected training sets: CHEMBL3091, CHEMBL4680051
-  - Expected training cutoff: 2020-12-31
-  - Expected holdout: PubChem AID 2202264
-  - Expected holdout size: 106
+  - Expected additional source: PubChem AID 2202264, pooled with the public set
+  - Expected additional-source size: 106 compounds
   - Expected series core: 5,5-dimethyl-L-norleucine
-  - Expected `holdout_overlap`: 0
   - Assert each expected value in the matching build-order step
 
 - **GENERALISATION RUN — CTSL** — no fixture, by design
@@ -215,7 +212,7 @@
 
 - **JOINS**
   - `scaffold_match(series_core_smiles, ligand_smiles) -> bool`
-  - `holdout_disjointness(train, holdout) -> Disjointness` — fields `novel`, `overlap`, on InChIKey
+  - `pool_compounds(*sources) -> set[str]` — merge every source, deduplicated on InChIKey
   - `alias_resolution(target) -> list[str]`
   - `record_vs_compound(records) -> tuple[int, int]`
   - Write one `join_result` row per join
@@ -224,7 +221,6 @@
   - Run after dossier v1 is written
   - Use RDKit only
   - Skip entirely if a required scout gapped; verdict is `insufficient retrieval`
-  - `holdout_overlap` must equal 0, else withdraw time-split claim
   - `n_analogs` must be >= 20, else not ready
   - `n_distinct_inchikeys` must equal `n_analogs`, else not ready
   - `dominant_scaffold_n` must be >= 15, else not ready
@@ -233,11 +229,11 @@
   - `ligand_heavy` must be >= 15, else reject receptor
   - `best_resolution` must be <= 2.5, else qualify recommendation as triage-only
   - `best_resolution` must be <= 3.5, else reject receptor
+  - Report `years_since_latest` and `dormant` — never gate on them
   - Write one `check_result` row per check
 
 - **LOOP**
-  - If `holdout_overlap` > 0 → withdraw time-split claim, hand off scaffold split
-  - Else if `n_distinct_inchikeys` != `n_analogs` → not ready for SBDD
+  - If `n_distinct_inchikeys` != `n_analogs` → not ready for SBDD
   - Else if `dominant_scaffold_n` < 15 → not ready for SBDD
   - Else if `n_analogs` < 20 → not ready for SBDD
   - Else if `activity_span_log` < 2.0 → not ready for SBDD
@@ -251,7 +247,7 @@
 
 - **REPLICATION**
   - Re-run answer 1 (receptor choice) `REPLICATES` times in fresh contexts
-  - Never replicate answer 4 — `holdout_overlap` is deterministic
+  - Never replicate answer 4 — recency is a lookup, not a judgement
   - Write `agree_n` and `agree_of`
   - Report agreement in dossier
 
@@ -260,7 +256,7 @@
   - Section 2: contradictions between scouts
   - Section 3: gap list, rendered even when empty
   - Section 4: recommendation and failure condition
-  - Section 5: hand-off spec — receptor, resolution, method, site origin, train accession, holdout accession, fallback receptor, resolution qualifier
+  - Section 5: hand-off spec — receptor, resolution, method, site origin, pooled compound sources, fallback receptor, resolution qualifier
   - Section 6: cost line — tokens, tool calls, wall clock
   - Expand any answer to `query`, `output_hash`, `source_date`, `retrieved_at`
   - Emit static HTML
@@ -330,7 +326,7 @@
   - [ ] 5 scouts return typed records within deadline
   - [ ] killing 1 scout yields a gap entry, not a crash
   - [ ] fabricated accession demoted and flagged
-  - [ ] `holdout_disjointness` returns 106 novel and 0 overlap, or time-split claim withdrawn
+  - [ ] pooled count exceeds the single-source count, with duplicates removed
   - [ ] every claim carries grade and resolvable identifier
   - [ ] gap list renders when empty
   - [ ] 2 targets give 2 different recommendations
