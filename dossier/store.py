@@ -66,7 +66,17 @@ CREATE TABLE IF NOT EXISTS resolution (
     note         TEXT NOT NULL DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS join_result (
+    join_id          TEXT PRIMARY KEY,
+    run_id           TEXT NOT NULL REFERENCES run(run_id),
+    kind             TEXT NOT NULL,
+    input_record_ids TEXT NOT NULL DEFAULT '',
+    result           TEXT NOT NULL,
+    grade            TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS record_by_run ON record(run_id, grade);
+CREATE INDEX IF NOT EXISTS join_by_run ON join_result(run_id);
 CREATE INDEX IF NOT EXISTS gap_by_run ON gap(run_id);
 """
 
