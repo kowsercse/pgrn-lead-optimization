@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420" role="img" aria-label="Three kinds of sameness resolved: a ChEMBL compound and a PubChem patent deposit are one molecule; a target symbol and a pathway alias are one protein; activity records and distinct compounds are one set of evidence counted two ways. Receptor selection is shown separately as an inference, not a resolution of sameness.">
+      <defs>
+        <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="#6B7280"/>
+        </marker>
+      </defs>
+      <g font-family="ui-sans-serif, -apple-system, sans-serif" font-size="12" fill="#6B7280">
+
+        <g font-family="ui-monospace, Menlo, monospace" font-size="10.5" opacity=".6">
+          <text x="14" y="18">TWO RECORDS</text>
+          <text x="356" y="18">ONE THING</text>
+          <text x="630" y="18">WITHOUT IT</text>
+        </g>
+        <line x1="14" y1="26" x2="886" y2="26" stroke="#6B7280" opacity=".25"/>
+
+        <rect x="14" y="40" width="290" height="26" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+        <rect x="14" y="70" width="290" height="26" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+        <text x="26" y="57" font-size="11">measured compound, ChEMBL</text>
+        <text x="26" y="87" font-size="11">same structure, PubChem patent deposit</text>
+        <rect x="352" y="55" width="228" height="28" rx="3" fill="none" stroke="#7C89E8" stroke-width="1.6"/>
+        <text x="364" y="73" font-size="11" fill="#7C89E8">one molecule — pool_compounds</text>
+        <text x="630" y="63" font-size="10.5" opacity=".8">counted twice; the target looks</text>
+        <text x="630" y="78" font-size="10.5" opacity=".8">richer in chemical matter than it is</text>
+
+        <rect x="14" y="126" width="290" height="26" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+        <rect x="14" y="156" width="290" height="26" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+        <text x="26" y="143" font-size="11">query on the target symbol</text>
+        <text x="26" y="173" font-size="11">query on the pathway or disease alias</text>
+        <rect x="352" y="141" width="228" height="28" rx="3" fill="none" stroke="#7C89E8" stroke-width="1.6"/>
+        <text x="364" y="159" font-size="11" fill="#7C89E8">one protein — alias_resolution</text>
+        <text x="630" y="149" font-size="10.5" opacity=".8">a series filed under a non-molecular</text>
+        <text x="630" y="164" font-size="10.5" opacity=".8">target ID never appears at all</text>
+
+        <rect x="14" y="212" width="290" height="26" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+        <rect x="14" y="242" width="290" height="26" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+        <text x="26" y="229" font-size="11">400 activity records</text>
+        <text x="26" y="259" font-size="11">138 distinct compounds</text>
+        <rect x="352" y="227" width="228" height="28" rx="3" fill="none" stroke="#7C89E8" stroke-width="1.6"/>
+        <text x="364" y="245" font-size="11" fill="#7C89E8">one count — record_vs_compound</text>
+        <text x="630" y="235" font-size="10.5" opacity=".8">one compound assayed five times</text>
+        <text x="630" y="250" font-size="10.5" opacity=".8">reads as five compounds</text>
+
+        <g stroke="#6B7280" stroke-width="1.2" fill="none" marker-end="url(#b1)">
+          <line x1="310" y1="69" x2="346" y2="69"/><line x1="586" y1="69" x2="622" y2="69"/>
+          <line x1="310" y1="155" x2="346" y2="155"/><line x1="586" y1="155" x2="622" y2="155"/>
+          <line x1="310" y1="241" x2="346" y2="241"/><line x1="586" y1="241" x2="622" y2="241"/>
+        </g>
+
+        <line x1="14" y1="296" x2="886" y2="296" stroke="#6B7280" opacity=".2" stroke-dasharray="4 3"/>
+        <text x="14" y="322" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#C0714F" opacity=".85">RECEPTOR SELECTION — AN INFERENCE, NOT A RESOLUTION OF SAMENESS</text>
+        <rect x="14" y="334" width="872" height="74" rx="3" fill="none" stroke="#C0714F" stroke-width="1.4"/>
+        <text x="28" y="356" font-size="11.5" fill="#C0714F">scaffold_match(series_core, bound_ligand) — dossier/receptor.py</text>
+        <text x="28" y="376" font-size="10.5" opacity=".85">Links a patent series' core to a structure's bound ligand to infer which structure to design against. A chemotype match</text>
+        <text x="28" y="391" font-size="10.5" opacity=".85">can outweigh a sharper picture of an unrelated site.</text>
+        <text x="28" y="404" font-size="10.5" opacity=".7">It relates two different things rather than recognising one thing twice, so it is graded as an inference.</text>
+      </g>
+    </svg>

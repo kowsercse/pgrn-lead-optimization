@@ -203,7 +203,6 @@ stateDiagram-v2
     [*] --> DossierV1
     DossierV1 --> Checks : assessment commits, checks not yet computed
     Checks --> Evaluate : check results returned
-    Evaluate --> ScaffoldSplit : holdout overlap > 0
     Evaluate --> NotReady : thin series or span < 2 logs
     Evaluate --> NoStructure : resolution > 3.5 A
     Evaluate --> TriageOnly : resolution > 2.5 A

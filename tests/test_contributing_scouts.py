@@ -114,7 +114,7 @@ def test_patent_records_name_both_sources():
 
 def test_a_pubchem_only_set_is_offered_with_a_resolvable_url():
     got = reconcile_with_chembl(pubchem_aids=[2202264], chembl_assay_aids=[])
-    cand = [r for r in patent_records(got) if r.claim == "candidate held-out set"]
+    cand = [r for r in patent_records(got) if r.claim == "additional compound source"]
     assert cand and cand[0].grade == "verified"
     assert "2202264" in cand[0].source_url
 

@@ -34,17 +34,18 @@ class Handoff:
     receptor: str | None
     fallback_receptor: str | None
     site_ligand: str | None
-    train_accession: str | None
-    holdout_accession: str | None
+    # Every source that contributed a compound, pooled. Not partitioned into a set to
+    # learn from and a set to check against: how a downstream model would be validated
+    # is the next person's decision, and splitting here would make the series look
+    # thinner than it is. See DESIGN.md D8.
+    series_accessions: tuple[str, ...] = ()
 
     def spec(self) -> str:
         parts = [f"receptor {self.receptor}"]
         if self.site_ligand:
             parts.append(f"site defined by {self.site_ligand}")
-        if self.train_accession:
-            parts.append(f"train on {self.train_accession}")
-        if self.holdout_accession:
-            parts.append(f"validate on {self.holdout_accession}")
+        if self.series_accessions:
+            parts.append("series pooled from " + ", ".join(self.series_accessions))
         if self.fallback_receptor:
             parts.append(f"fall back to {self.fallback_receptor}")
         return "; ".join(parts)

@@ -20,7 +20,7 @@ def f(**over):
 
 
 HANDOFF = Handoff(receptor="1ABC", fallback_receptor="2DEF", site_ligand="LIG",
-                  train_accession="ACC1", holdout_accession="AID1")
+                  series_accessions=("ACC1", "AID1"))
 
 
 # --- the seven-case branch table (DESIGN.md D3) --------------------------
@@ -77,14 +77,22 @@ def test_proceeding_hands_off_every_identifier_it_was_given():
 
 def test_the_proposal_names_no_target_it_was_not_given():
     got = next_step(f(), Handoff(receptor="9XYZ", fallback_receptor=None,
-                                 site_ligand=None, train_accession=None,
-                                 holdout_accession=None))
+                                 site_ligand=None, series_accessions=()))
     assert "9XYZ" in got.recommendation
 
 
 def test_a_reversed_recommendation_says_what_to_do_instead():
     got = next_step(f(dominant_scaffold_n=2), HANDOFF)
     assert "ligand-based" in got.recommendation.lower()
+
+
+def test_the_handoff_pools_its_sources_rather_than_splitting_them():
+    """D8: the sources are one series. Prescribing a train/validate split would be
+    both outside the question asked and a claim the dossier cannot support."""
+    spec = HANDOFF.spec()
+    assert "ACC1" in spec and "AID1" in spec
+    for split_word in ("train", "validate", "holdout", "held-out"):
+        assert split_word not in spec.lower()
 
 
 def test_every_proposal_carries_the_checks_that_decided_it():

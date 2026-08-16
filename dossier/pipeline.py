@@ -56,8 +56,10 @@ class PipelineResult:
 def _handoff(records: Sequence[Record]) -> Handoff:
     """Every identifier is derived from scout output. Nothing is hard-coded."""
     cands = [r for r in records if r.claim == "candidate structure" and r.source_id]
-    holdouts = [r for r in records if r.claim == "candidate held-out set" and r.source_id]
-    train = [r for r in records if r.claim == "target accession" and r.source_id]
+    # Every source that contributed compounds, in the order found. Pooled, not split.
+    contributing = ("target accession", "additional compound source")
+    series = [r.source_id for r in records
+              if r.claim in contributing and r.source_id]
     ligand = None
     if cands and "ligand:" in cands[0].value:
         ligand = cands[0].value.split("ligand:")[-1].strip() or None
@@ -65,8 +67,7 @@ def _handoff(records: Sequence[Record]) -> Handoff:
         receptor=cands[0].source_id if cands else None,
         fallback_receptor=cands[1].source_id if len(cands) > 1 else None,
         site_ligand=ligand,
-        train_accession=train[0].source_id if train else None,
-        holdout_accession=holdouts[0].source_id if holdouts else None,
+        series_accessions=tuple(dict.fromkeys(series)),
     )
 
 

@@ -1,9 +1,9 @@
 """Patents scout — PubChem BioAssay against ChEMBL.
 
 Named check: query PubChem AND ChEMBL. Patent-derived compound sets are routinely
-deposited in one and absent from the other, and a set present in PubChem but missing
-from ChEMBL is exactly what makes a prospective held-out validation set possible — the
-model cannot have trained on data it has never seen.
+deposited in one and absent from the other, so a target assessed from ChEMBL alone is
+assessed from part of its evidence. What this scout returns is an additional compound
+source to pool in, not a set held apart to test against. See DESIGN.md D8.
 
 Contributing, not required: its absence is a gap, not a downgrade.
 """
@@ -66,7 +66,7 @@ def to_records(d: DepositedSet, *, query: str = "pubchem aids vs chembl",
                output_hash=_hash(["only", list(d.only_in_pubchem)])),
     ]
     records += [
-        Record(run_id="", scout=SCOUT, claim="candidate held-out set",
+        Record(run_id="", scout=SCOUT, claim="additional compound source",
                value=f"PubChem AID {aid}, absent from ChEMBL",
                grade="verified", source_id=str(aid),
                source_url=_AID_WEB.format(aid=aid), query=query)
@@ -91,9 +91,9 @@ class PatentsScout:
         return (
             f"Find compound sets deposited against {target}. Query PubChem BioAssay "
             f"and ChEMBL separately and report which sets appear in one but not the "
-            f"other — a set present in PubChem and absent from ChEMBL can serve as a "
-            f"held-out validation set, because a model trained on ChEMBL has not seen "
-            f"it. Report deposit dates and applicants where available."
+            f"other — a set present in PubChem and absent from ChEMBL is chemical "
+            f"matter this target has that a ChEMBL-only assessment would miss. Report "
+            f"deposit dates and applicants where available."
         )
 
     def run(self, target: str) -> list[Record]:

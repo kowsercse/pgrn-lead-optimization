@@ -136,7 +136,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <body>
 <div class="wrap">
 <h1 id="roadmap--target-dossier-agent">Roadmap — target dossier agent</h1>
-<p>Input: a protein target. Output: a graded answer to <strong>whether this target is tractable for structure-based small-molecule drug design</strong> — with the receptor, the training set and the validation set already chosen, or a stated reason not to proceed.</p>
+<p>Input: a protein target. Output: a graded answer to <strong>whether this target is tractable for structure-based small-molecule drug design</strong> — with the receptor and the compound series already chosen, or a stated reason not to proceed.</p>
 <p>The agent runs no structure-based calculation of any kind — no docking, no free-energy methods, no molecular dynamics. It assesses tractability from public structural and bioactivity data and hands a specification to whoever has the compute.</p>
 <p>re:AGENT, Track A. Submission 10:45 AM Sun 16 Aug 2026; demos 12:30–14:00.</p>
 <h2 id="1-the-question">1. The question</h2>
@@ -145,7 +145,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <li><strong>Is there a pocket, and which structure do we design against?</strong> One recommended receptor, its resolution and method, the ligand that defines the site, and why that entry over the alternatives.</li>
 <li><strong>What chemical matter exists, and how good is it?</strong> Distinct compounds with measured activity, potency range, assay types.</li>
 <li><strong>Is there a congeneric series?</strong> A related set supporting SAR reasoning, not scattered singletons.</li>
-<li><strong>What can serve as a held-out validation set?</strong> Ideally separated by time.</li>
+<li><strong>Is anyone still working on this target?</strong> The date of the most recent measurement, reported alongside the checks and never gating them.</li>
 <li><strong>What is missing?</strong> A list, with the observation that would change the answer.</li>
 </ol>
 <p>The pipeline is <strong>fixed, not planned per question</strong>. Same five scouts, same sources, target is the only variable.</p>
@@ -153,10 +153,10 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <p>Robin (Ghareeb et al., <em>Nature</em> 655, 497–505) built an agentic orchestrator for this class of task, measured it, and removed it: <em>"we observed that Robin almost always called tools in the same order, leading to a deterministic workflow. Therefore, we translated Robin into a streamlined Jupyter notebook to improve stability and ease of use."</em> When the question is well-typed the planner converges on one sequence anyway. Hard-code it and spend the budget on verification.</p>
 </blockquote>
 <h3 id="where-the-value-is">Where the value is</h3>
-<p>Any single query returns a list. The value is in the <strong>joins between sources</strong> — facts no individual scout produces. Two such joins decided the whole downstream plan for sortilin (section 4).</p>
+<p>Any single query returns a list. The value is in <strong>reconciling the sources</strong> — deciding when two entries are the same molecule, the same protein or the same evidence. Every headline count in the dossier is wrong without it (section 4).</p>
 <h2 id="2-closing-the-loop">2. Closing the loop</h2>
 <p>A dossier that only recommends is a report. The loop is what makes it an agent: the dossier commits to an assessment, then names checks it has not yet computed. The checks run over the retrieved data, and the result rewrites the recommendation.</p>
-<figure><svg role="img" aria-label="One commitment at the top; three check outcomes below it, each producing a different recommendation, with the effect on the original named in the right-hand column" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 392">
+<figure><svg role="img" aria-label="One commitment at the top; four check outcomes below it, each producing a different recommendation, with the effect on the original named in the right-hand column" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 452">
   <defs>
     <marker id="lp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
@@ -168,11 +168,11 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
     <rect x="40" y="16" width="820" height="66" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
     <text x="58" y="38" font-size="10.5" font-family="ui-monospace, Menlo, monospace"
           letter-spacing="1.2" fill="var(--accent)">DOSSIER v1 COMMITS</text>
-    <text x="58" y="60" font-size="13" fill="var(--accent)">SORT1 is tractable for structure-based design — use PDB 6X48,</text>
-    <text x="58" y="76" font-size="13" fill="var(--accent)">train on ChEMBL ≤ 2020, validate on PubChem AID 2202264</text>
+    <text x="58" y="60" font-size="13" fill="var(--accent)">SORT1 is tractable for structure-based design — use PDB 6X48 and the</text>
+    <text x="58" y="76" font-size="13" fill="var(--accent)">series of 138 distinct compounds pooled from ChEMBL and PubChem</text>
 
     <line x1="450" y1="82" x2="450" y2="106" stroke="currentColor" stroke-width="1.4" marker-end="url(#lp)"/>
-    <text x="466" y="100" font-size="11.5" font-style="italic">then five feasibility checks run over the retrieved data</text>
+    <text x="466" y="100" font-size="11.5" font-style="italic">then four feasibility checks run over the retrieved data</text>
 
     <!-- column headers -->
     <g font-size="10" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.1" opacity=".75">
@@ -182,40 +182,51 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
     </g>
     <line x1="40" y1="140" x2="860" y2="140" stroke="currentColor" stroke-width="1" opacity=".35"/>
 
-    <!-- row 1 -->
-    <text x="40" y="170" font-size="12.5">all five checks pass</text>
+    <!-- row 1 — proceed -->
+    <text x="40" y="170" font-size="12.5">all four checks pass, ≤ 2.5 Å</text>
     <line x1="292" y1="166" x2="320" y2="166" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
     <text x="330" y="164" font-size="12.5">Proceed with SBDD on 6X48. Hand off the receptor,</text>
-    <text x="330" y="180" font-size="12.5">site, training set and holdout.</text>
+    <text x="330" y="180" font-size="12.5">the site and the pooled series.</text>
     <rect x="754" y="152" width="106" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1"/>
     <text x="807" y="167" font-size="10.5" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">confirmed</text>
     <line x1="40" y1="200" x2="860" y2="200" stroke="currentColor" stroke-width="1" opacity=".18"/>
 
-    <!-- row 2 -->
-    <text x="40" y="230" font-size="12.5">holdout overlap &gt; 0</text>
+    <!-- row 2 — triage only -->
+    <text x="40" y="230" font-size="12.5">resolution 2.5 – 3.5 Å</text>
     <line x1="292" y1="226" x2="320" y2="226" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
-    <text x="330" y="224" font-size="12.5" fill="var(--accent)">Re-check how the compound sources merged;</text>
-    <text x="330" y="240" font-size="12.5" fill="var(--accent)">the pooled count looks wrong.</text>
+    <text x="330" y="224" font-size="12.5" fill="var(--accent)">Proceed, triage only. The structure will not carry</text>
+    <text x="330" y="240" font-size="12.5" fill="var(--accent)">contact-level design work.</text>
     <rect x="754" y="212" width="106" height="22" rx="2" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
-    <text x="807" y="227" font-size="10.5" text-anchor="middle" fill="var(--accent)" font-family="ui-monospace, Menlo, monospace">changed</text>
+    <text x="807" y="227" font-size="10.5" text-anchor="middle" fill="var(--accent)" font-family="ui-monospace, Menlo, monospace">qualified</text>
     <line x1="40" y1="260" x2="860" y2="260" stroke="currentColor" stroke-width="1" opacity=".18"/>
 
-    <!-- row 3 -->
-    <text x="40" y="290" font-size="12.5">one scaffold only, span &lt; 2 logs,</text>
-    <text x="40" y="306" font-size="12.5">or resolution worse than 3.5 Å</text>
-    <line x1="292" y1="292" x2="320" y2="292" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
-    <text x="330" y="290" font-size="12.5" fill="var(--reverse)">Not tractable for structure-based design. Go ligand-based,</text>
-    <text x="330" y="306" font-size="12.5" fill="var(--reverse)">or generate data first.</text>
-    <rect x="754" y="278" width="106" height="22" rx="2" fill="none" stroke="var(--reverse)" stroke-width="1.6"/>
-    <text x="807" y="293" font-size="10.5" text-anchor="middle" fill="var(--reverse)" font-family="ui-monospace, Menlo, monospace">reversed</text>
-    <line x1="40" y1="326" x2="860" y2="326" stroke="currentColor" stroke-width="1" opacity=".18"/>
+    <!-- row 3 — not ready -->
+    <text x="40" y="284" font-size="12.5">fewer than 20 analogs, duplicates</text>
+    <text x="40" y="300" font-size="12.5">among them, fewer than 15 on the</text>
+    <text x="40" y="316" font-size="12.5">dominant scaffold, or span &lt; 2 logs</text>
+    <line x1="292" y1="296" x2="320" y2="296" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
+    <text x="330" y="292" font-size="12.5" fill="var(--reverse)">Not ready. Nothing here supports learning a</text>
+    <text x="330" y="308" font-size="12.5" fill="var(--reverse)">structure–activity pattern; go ligand-based or generate data.</text>
+    <rect x="754" y="282" width="106" height="22" rx="2" fill="none" stroke="var(--reverse)" stroke-width="1.6"/>
+    <text x="807" y="297" font-size="10.5" text-anchor="middle" fill="var(--reverse)" font-family="ui-monospace, Menlo, monospace">reversed</text>
+    <line x1="40" y1="336" x2="860" y2="336" stroke="currentColor" stroke-width="1" opacity=".18"/>
 
-    <text x="40" y="356" font-size="11.5" font-style="italic">The agent writes the top box before it can see any of these numbers.</text>
-    <text x="40" y="374" font-size="11.5" font-style="italic">Two of the three rows overturn what it committed to.</text>
+    <!-- row 4 — no structure -->
+    <text x="40" y="366" font-size="12.5">no structure better than 3.5 Å,</text>
+    <text x="40" y="382" font-size="12.5">or no drug-sized bound ligand</text>
+    <line x1="292" y1="368" x2="320" y2="368" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
+    <text x="330" y="366" font-size="12.5" fill="var(--reverse)">Not tractable this way. There is no design-quality</text>
+    <text x="330" y="382" font-size="12.5" fill="var(--reverse)">structure to work against.</text>
+    <rect x="754" y="354" width="106" height="22" rx="2" fill="none" stroke="var(--reverse)" stroke-width="1.6"/>
+    <text x="807" y="369" font-size="10.5" text-anchor="middle" fill="var(--reverse)" font-family="ui-monospace, Menlo, monospace">reversed</text>
+    <line x1="40" y1="402" x2="860" y2="402" stroke="currentColor" stroke-width="1" opacity=".18"/>
+
+    <text x="40" y="428" font-size="11.5" font-style="italic">The agent writes the top box before it can see any of these numbers.</text>
+    <text x="40" y="446" font-size="11.5" font-style="italic">Three of the four rows change or overturn what it committed to.</text>
   </g>
-</svg><figcaption>Read it top to bottom. The agent writes the boxed commitment first, before it can see any of the numbers. The five checks then run, and two of the three possible outcomes overturn what it committed to — one narrows the validation claim, the other reverses the recommendation entirely. The right-hand column names the effect so the change is legible without re-reading the top box.</figcaption></figure>
+</svg><figcaption>Read it top to bottom. The agent writes the boxed commitment first, before it can see any of the numbers. The four checks then run, and three of the four possible outcomes change what it committed to — one narrows the recommendation to triage work, two reverse it. The right-hand column names the effect so the change is legible without re-reading the top box.</figcaption></figure>
 <p><strong>Data splitting is deliberately absent.</strong> Whether a future model could be cleanly validated is a planning detail for whoever picks the work up; it says nothing about whether this protein is tractable, and partitioning the molecules makes the target look thinner than it is. All sources are pooled on canonical identity instead. See <code>DESIGN.md</code> D8.</p>
-<p><strong>Why these checks and not a structure-based calculation.</strong> Docking, free-energy methods and molecular dynamics are all out of scope — no GPU budget. But the loop does not need them. It needs a measurement the agent has not already seen, and the feasibility checks are exactly that: the assessment commits first, the numbers are computed second, and they can contradict it. All five run in RDKit on a laptop in seconds.</p>
+<p><strong>Why these checks and not a structure-based calculation.</strong> Docking, free-energy methods and molecular dynamics are all out of scope — no GPU budget. But the loop does not need them. It needs a measurement the agent has not already seen, and the feasibility checks are exactly that: the assessment commits first, the numbers are computed second, and they can contradict it. All of them run in RDKit on a laptop in seconds.</p>
 <div class="scroll"><table>
 <thead>
 <tr>
@@ -226,9 +237,9 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 </thead>
 <tbody>
 <tr>
-<td>Series size and scaffold diversity</td>
-<td>Murcko scaffolds over the retrieved series</td>
-<td>One scaffold, or fewer than ~20 analogs — SAR reasoning is unsupportable</td>
+<td>Series depth</td>
+<td>Murcko scaffolds and InChIKeys over the retrieved series</td>
+<td>Fewer than 20 analogs, duplicates among them, or fewer than 15 on the dominant scaffold — SAR reasoning is unsupportable. Scaffold <em>count</em> is deliberately not a criterion; see <code>DESIGN.md</code> D1</td>
 </tr>
 <tr>
 <td>Activity range</td>
@@ -254,7 +265,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 </table></div>
 <p>To show the loop responds to evidence rather than to prompting, run it twice: once on sortilin, once on a target that fails a check. <strong>If the recommendation does not change between them, the loop is decorative and should be reported as such.</strong></p>
 <h2 id="3-the-pipeline">3. The pipeline</h2>
-<figure><svg role="img" aria-label="Target fans out to five source-bound scouts, through the resolver gate and join stage, to a dossier" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 396" role="img" aria-label="A target identifier fans out to five scouts bound to specific databases; their structured findings pass through a join stage that cross-references them, producing a dossier on which a scientist makes a go or no-go decision.">
+<figure><svg role="img" aria-label="Target fans out to five source-bound scouts, through the resolver gate and the harmonisation stage, to a dossier" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 396" role="img" aria-label="A target identifier fans out to five scouts bound to specific databases; their structured findings pass through a harmonisation stage that reconciles them, producing a dossier on which a scientist makes a go or no-go decision.">
       <defs>
         <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
@@ -297,14 +308,15 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
         <text x="502" y="110" font-size="12">Resolve citations</text>
         <text x="502" y="128" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">fetch · confirm span · demote</text>
 
-        <rect x="486" y="164" width="182" height="112" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="577" y="188" text-anchor="middle" fill="var(--accent)">Join</text>
+        <rect x="486" y="164" width="182" height="94" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="577" y="188" text-anchor="middle" fill="var(--accent)">Harmonise</text>
         <g font-size="10.5" fill="var(--accent)" opacity=".85" font-family="ui-monospace, Menlo, monospace">
-          <text x="502" y="210">scaffold ↔ ligand</text>
-          <text x="502" y="228">InChIKey set ops</text>
-          <text x="502" y="246">alias resolution</text>
-          <text x="502" y="264">record vs compound</text>
+          <text x="502" y="210">pool compounds</text>
+          <text x="502" y="228">alias resolution</text>
+          <text x="502" y="246">record vs compound</text>
         </g>
+        <rect x="486" y="264" width="182" height="26" rx="3" fill="none" stroke="var(--reverse)" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <text x="502" y="281" font-size="10.5" fill="var(--reverse)" font-family="ui-monospace, Menlo, monospace">receptor: scaffold match</text>
         <line x1="577" y1="148" x2="577" y2="158" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
 
         <!-- dossier -->
@@ -332,12 +344,13 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
           <path d="M424,254 C452,254 452,126 480,121"/>
           <path d="M424,322 C452,322 452,130 480,123"/>
         </g>
-        <line x1="668" y1="220" x2="710" y2="192" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+        <line x1="668" y1="212" x2="710" y2="190" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+        <path d="M668,277 C692,277 692,222 710,214" stroke="var(--reverse)" stroke-width="1.2" fill="none" stroke-dasharray="4 3" marker-end="url(#a1)"/>
         <line x1="842" y1="186" x2="884" y2="186" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
 
         <text x="440" y="368" text-anchor="middle" font-size="11" opacity=".65">every scout returns typed records with a resolvable source identifier and an evidence grade</text>
       </g>
-    </svg><figcaption>The decomposition is fixed, not planned. The same five scouts run against the same sources for any target, so the only variable is the input. Each returns typed records rather than prose, which is what allows the join stage to operate on them mechanically instead of by re-reading summaries. Nothing reaches the join stage until its citation has been fetched and checked — see section 5.</figcaption></figure>
+    </svg><figcaption>The decomposition is fixed, not planned. The same five scouts run against the same sources for any target, so the only variable is the input. Each returns typed records rather than prose, which is what allows the harmonisation stage to operate on them mechanically instead of by re-reading summaries. Nothing reaches that stage until its citation has been fetched and checked — see section 5.</figcaption></figure>
 <figure><svg role="img" aria-label="Reference run concurrency: 131 minutes of agent work in 39 minutes of wall clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 268" role="img" aria-label="Five scouts dispatched concurrently in the reference run; 131 minutes of total agent work completed in 39 minutes of wall clock, set by the longest-running scout.">
       <defs>
         <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -416,7 +429,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 </tbody>
 </table></div>
 <h2 id="4-harmonisation">4. Harmonisation</h2>
-<figure><svg role="img" aria-label="The two cross-source joins, with their real identifiers" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 330" role="img" aria-label="Two cross-source joins. A patent series scaffold matched to a co-crystal ligand yields a chemotype-matched receptor. An InChIKey set difference between a ChEMBL set and a PubChem assay yields a prospective holdout with no overlap.">
+<figure><svg role="img" aria-label="Three kinds of sameness resolved across sources, with receptor selection kept separate as an inference" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-label="Three kinds of sameness resolved: a ChEMBL compound and a PubChem patent deposit are one molecule; a target symbol and a pathway alias are one protein; activity records and distinct compounds are one set of evidence counted two ways. Receptor selection is shown separately as an inference, not a resolution of sameness.">
       <defs>
         <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
@@ -424,57 +437,53 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
       </defs>
       <g font-family="ui-sans-serif, -apple-system, sans-serif" font-size="12" fill="currentColor">
 
-        <text x="14" y="20" font-size="11" font-family="ui-monospace, Menlo, monospace" opacity=".6">JOIN 1 — SCAFFOLD MATCH</text>
+        <g font-family="ui-monospace, Menlo, monospace" font-size="10.5" opacity=".6">
+          <text x="14" y="18">TWO RECORDS</text>
+          <text x="356" y="18">ONE THING</text>
+          <text x="630" y="18">WITHOUT IT</text>
+        </g>
+        <line x1="14" y1="26" x2="886" y2="26" stroke="currentColor" opacity=".25"/>
 
-        <rect x="14" y="34" width="222" height="50" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
-        <text x="28" y="55" font-size="11.5">Patent series core</text>
-        <text x="28" y="72" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">5,5-dimethyl-L-norleucine</text>
+        <rect x="14" y="40" width="290" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <rect x="14" y="70" width="290" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="26" y="57" font-size="11">measured compound, ChEMBL</text>
+        <text x="26" y="87" font-size="11">same structure, PubChem patent deposit</text>
+        <rect x="352" y="55" width="228" height="28" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+        <text x="364" y="73" font-size="11" fill="var(--accent)">one molecule — pool_compounds</text>
+        <text x="630" y="63" font-size="10.5" opacity=".8">counted twice; the target looks</text>
+        <text x="630" y="78" font-size="10.5" opacity=".8">richer in chemical matter than it is</text>
 
-        <rect x="14" y="98" width="222" height="50" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
-        <text x="28" y="119" font-size="11.5">Co-crystal ligand</text>
-        <text x="28" y="136" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">UP4 in PDB 6X48</text>
+        <rect x="14" y="126" width="290" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <rect x="14" y="156" width="290" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="26" y="143" font-size="11">query on the target symbol</text>
+        <text x="26" y="173" font-size="11">query on the pathway or disease alias</text>
+        <rect x="352" y="141" width="228" height="28" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+        <text x="364" y="159" font-size="11" fill="var(--accent)">one protein — alias_resolution</text>
+        <text x="630" y="149" font-size="10.5" opacity=".8">a series filed under a non-molecular</text>
+        <text x="630" y="164" font-size="10.5" opacity=".8">target ID never appears at all</text>
 
-        <circle cx="330" cy="91" r="27" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
-        <text x="330" y="96" text-anchor="middle" font-size="15" fill="var(--accent)">≡</text>
-
-        <rect x="416" y="62" width="250" height="58" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="432" y="86" fill="var(--accent)" font-size="11.5">Receptor chemotype-matched</text>
-        <text x="432" y="104" fill="var(--accent)" font-size="11.5">to the series being scored</text>
+        <rect x="14" y="212" width="290" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <rect x="14" y="242" width="290" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="26" y="229" font-size="11">400 activity records</text>
+        <text x="26" y="259" font-size="11">138 distinct compounds</text>
+        <rect x="352" y="227" width="228" height="28" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+        <text x="364" y="245" font-size="11" fill="var(--accent)">one count — record_vs_compound</text>
+        <text x="630" y="235" font-size="10.5" opacity=".8">one compound assayed five times</text>
+        <text x="630" y="250" font-size="10.5" opacity=".8">reads as five compounds</text>
 
         <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#b1)">
-          <path d="M236,59 C280,59 280,80 300,84"/>
-          <path d="M236,123 C280,123 280,102 300,98"/>
-          <line x1="357" y1="91" x2="410" y2="91"/>
+          <line x1="310" y1="69" x2="346" y2="69"/><line x1="586" y1="69" x2="622" y2="69"/>
+          <line x1="310" y1="155" x2="346" y2="155"/><line x1="586" y1="155" x2="622" y2="155"/>
+          <line x1="310" y1="241" x2="346" y2="241"/><line x1="586" y1="241" x2="622" y2="241"/>
         </g>
-        <text x="700" y="86" font-size="11" opacity=".7">docking a series into a</text>
-        <text x="700" y="102" font-size="11" opacity=".7">structure of its own chemotype</text>
 
-        <line x1="14" y1="176" x2="886" y2="176" stroke="currentColor" opacity=".2"/>
-
-        <text x="14" y="204" font-size="11" font-family="ui-monospace, Menlo, monospace" opacity=".6">JOIN 2 — POOL SOURCES ON INCHIKEY</text>
-
-        <rect x="14" y="218" width="222" height="50" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
-        <text x="28" y="239" font-size="11.5">public measured set</text>
-        <text x="28" y="256" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">ChEMBL</text>
-
-        <rect x="14" y="278" width="222" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
-        <text x="28" y="297" font-size="11.5">patent-deposited set</text>
-        <text x="28" y="313" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">additional compounds</text>
-
-        <circle cx="330" cy="270" r="27" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
-        <text x="330" y="276" text-anchor="middle" font-size="14" fill="var(--accent)">∪</text>
-
-        <rect x="416" y="242" width="250" height="58" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="432" y="266" fill="var(--accent)" font-size="11.5">One pooled set,</text>
-        <text x="432" y="284" fill="var(--accent)" font-size="11.5">no double-counting</text>
-
-        <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#b1)">
-          <path d="M236,243 C280,243 280,258 300,263"/>
-          <path d="M236,300 C280,300 280,282 300,277"/>
-          <line x1="357" y1="270" x2="410" y2="270"/>
-        </g>
-        <text x="700" y="266" font-size="11" opacity=".7">every source counted, none</text>
-        <text x="700" y="282" font-size="11" opacity=".7">counted twice</text>
+        <line x1="14" y1="296" x2="886" y2="296" stroke="currentColor" opacity=".2" stroke-dasharray="4 3"/>
+        <text x="14" y="322" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="var(--reverse)" opacity=".85">RECEPTOR SELECTION — AN INFERENCE, NOT A RESOLUTION OF SAMENESS</text>
+        <rect x="14" y="334" width="872" height="74" rx="3" fill="none" stroke="var(--reverse)" stroke-width="1.4"/>
+        <text x="28" y="356" font-size="11.5" fill="var(--reverse)">scaffold_match(series_core, bound_ligand) — dossier/receptor.py</text>
+        <text x="28" y="376" font-size="10.5" opacity=".85">Links a patent series' core to a structure's bound ligand to infer which structure to design against. A chemotype match</text>
+        <text x="28" y="391" font-size="10.5" opacity=".85">can outweigh a sharper picture of an unrelated site.</text>
+        <text x="28" y="404" font-size="10.5" opacity=".7">It relates two different things rather than recognising one thing twice, so it is graded as an inference.</text>
       </g>
     </svg><figcaption>Five databases describe overlapping reality in incompatible ways. Before any count means anything, three kinds of sameness have to be resolved.</figcaption></figure>
 <p>Nothing here looks for a difference between sources. Every source contributes; harmonisation is what stops the same fact being counted twice or missed entirely.</p>
@@ -577,20 +586,20 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <td>Verified</td>
 </tr>
 <tr>
-<td>Held-out set?</td>
-<td>PubChem AID 2202264, priority Sep 2021, absent from ChEMBL. Time split, pending InChIKey disjointness</td>
-<td>Inferred</td>
+<td>Still active?</td>
+<td>Most recent measurement 2021 (PubChem AID 2202264, priority Sep 2021, absent from ChEMBL and pooled in). Five years, well inside the ten-year dormancy flag</td>
+<td>Verified</td>
 </tr>
 <tr>
 <td>What is missing?</td>
-<td>Disjointness unconfirmed; no deposited progranulin HTS found; no docking has been run by anyone here, so tractability is assessed from structure and data, not demonstrated; latozinemab raised progranulin and missed its Phase 3 endpoint Oct 2025</td>
+<td>No deposited progranulin HTS found; no docking has been run by anyone here, so tractability is assessed from structure and data, not demonstrated; latozinemab raised progranulin and missed its Phase 3 endpoint Oct 2025</td>
 <td>Unverified</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Recommendation: sortilin is tractable for structure-based design. Proceed on 6X48, with a resolution caveat.</strong> The target clears the bar that kills most such projects — a pocket with drug-like ligands bound, a congeneric series spanning two logs of potency, and a validation set separated by time. At 2.9 Å it supports triage and shape-based work; contact-level optimisation needs either 5MRI, which is not chemotype-matched, or a new structure.</p>
-<p><strong>Hand-off specification:</strong> receptor 6X48, box defined from the co-crystallized UP4 ligand; training set ChEMBL SORT1 published ≤2020; prospective validation on PubChem AID 2202264; fall back to 5MRI at 2.00 Å if pose quality on 6X48 proves inadequate.</p>
-<p><strong>Failure condition:</strong> if InChIKey disjointness fails, the prospective validation claim is withdrawn and the hand-off specifies a scaffold split instead. If the series collapses to a single Murcko scaffold or spans under two log units of activity, the recommendation inverts to <em>not yet ready for structure-based design</em>.</p>
+<p><strong>Recommendation: sortilin is tractable for structure-based design. Proceed on 6X48, with a resolution caveat.</strong> The target clears the bar that kills most such projects — a pocket with drug-like ligands bound, a congeneric series spanning two logs of potency, and published work recent enough to be live. At 2.9 Å it supports triage and shape-based work; contact-level optimisation needs either 5MRI, which is not chemotype-matched, or a new structure.</p>
+<p><strong>Hand-off specification:</strong> receptor 6X48, box defined from the co-crystallized UP4 ligand; the series pooled on InChIKey across ChEMBL SORT1 and PubChem AID 2202264; fall back to 5MRI at 2.00 Å if pose quality on 6X48 proves inadequate. How that series is partitioned for any downstream model is left to whoever picks the work up — see <code>DESIGN.md</code> D8.</p>
+<p><strong>Failure condition:</strong> if fewer than 20 distinct analogs survive pooling, or fewer than 15 sit on the dominant scaffold, or the series spans under two log units of activity, the recommendation inverts to <em>not yet ready for structure-based design</em>.</p>
 <p>Downstream of a go decision, the design loop was measured during scoping: 963 analogs generated, 823 surviving structural-alert and property gates, scored across 104 ADMET endpoints and ranked, in <strong>12.4 s</strong> on a laptop with no GPU and no network. <code>pip install rdkit crem admet-ai mol_ga</code> plus one fragment database. The dossier decides whether to point that loop at a target; it is not the loop.</p>
 <h3 id="target-landscape">Target landscape</h3>
 <figure><svg role="img" aria-label="Scatter of neurodegeneration targets by distinct compounds against liganded PDB structures, both log scales" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 352" role="img" aria-label="Scatter of neurodegeneration targets by distinct compounds with measured activity against liganded PDB structures, both on log scales. Sortilin sits at the low-data corner but above the minimum structural threshold, while progranulin itself has zero liganded structures.">
@@ -735,17 +744,17 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <tbody>
 <tr>
 <td><strong>Closing the loop</strong> — does the agent analyze data it hasn't seen and propose a next experiment that changes when the results change?</td>
-<td>Section 2. The dossier commits to an assessment, then five feasibility checks are computed over the retrieved data and can contradict it; each of three outcomes yields a different next step. Run on two targets, one of which fails a check, so the change is demonstrated rather than asserted</td>
+<td>Section 2. The dossier commits to an assessment, then four feasibility checks are computed over the retrieved data and can contradict it; each of four outcomes yields a different next step. Run on two targets, one of which fails a check, so the change is demonstrated rather than asserted</td>
 <td>Was the gap</td>
 </tr>
 <tr>
 <td><strong>Inspectability</strong> — can you reconstruct why the agent concluded what it did?</td>
-<td>Every record stores the exact query or command, an output hash for Measured claims, the source document's date alongside the retrieval timestamp, and an evidence grade. Each join emits its own graded record, so a conclusion traces to the specific cross-reference behind it</td>
+<td>Every record stores the exact query or command, an output hash for Measured claims, the source document's date alongside the retrieval timestamp, and an evidence grade. Each harmonisation step emits its own graded record, so a conclusion traces to the specific reconciliation behind it</td>
 <td>Strong</td>
 </tr>
 <tr>
 <td><strong>Validation</strong> — how do you know the output is correct, by some standard outside the agent's own reasoning?</td>
-<td>Three external standards: the resolver gate fetches every cited identifier and confirms the quoted value; the feasibility checks are deterministic computations the agent cannot argue with; the holdout series post-dates and is absent from all training data. No component ranks claims by asking a model which it prefers</td>
+<td>Three external standards: the resolver gate fetches every cited identifier and confirms the quoted value; the feasibility checks are deterministic computations the agent cannot argue with; every pooled compound count is reconciled against a second source rather than taken from one. No component ranks claims by asking a model which it prefers</td>
 <td>Strong</td>
 </tr>
 <tr>
@@ -780,7 +789,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 </tr>
 <tr>
 <td>Sat 22:00–23:30</td>
-<td><strong>Join stage.</strong> RDKit substructure matching, InChIKey set ops, alias resolution, record-vs-compound reconciliation. Each join emits its own graded record</td>
+<td><strong>Harmonisation stage.</strong> InChIKey pooling, alias resolution, record-vs-compound reconciliation, and — kept separate — RDKit substructure matching for receptor selection. Each emits its own graded record</td>
 </tr>
 <tr>
 <td>Sat 23:30–00:45</td>
@@ -788,7 +797,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 </tr>
 <tr>
 <td>Sun 00:45–01:45</td>
-<td><strong>Replicate decision-critical answers.</strong> Receptor choice and holdout disjointness, three fresh contexts each, agreement reported as a number. Robin runs 8 independent trajectories for this reason; ERA shows replicate spread 0.13–0.59 on the same method</td>
+<td><strong>Replicate decision-critical answers.</strong> Receptor choice and the pooled compound count, three fresh contexts each, agreement reported as a number. Robin runs 8 independent trajectories for this reason; ERA shows replicate spread 0.13–0.59 on the same method</td>
 </tr>
 <tr>
 <td>Sun 01:45–07:00</td>
@@ -796,7 +805,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 </tr>
 <tr>
 <td>Sun 07:00–08:00</td>
-<td><strong>Close the loop, both branches.</strong> Compute the five feasibility checks, feed them back, regenerate the dossier. Run on two targets, one of which fails a check, and capture the two different next steps. RDKit only — no GPU, no container, no Modal. This block answers the first judging criterion and nothing else in the build does</td>
+<td><strong>Close the loop, both branches.</strong> Compute the four feasibility checks, feed them back, regenerate the dossier. Run on two targets, one of which fails a check, and capture the two different next steps. RDKit only — no GPU, no container, no Modal. This block answers the first judging criterion and nothing else in the build does</td>
 </tr>
 <tr>
 <td>Sun 08:00–09:30</td>
@@ -821,7 +830,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <ol type="1">
 <li><strong>The task, 25 s.</strong> Assembling a target dossier by hand takes a computational chemist several days. State the input and the five questions.</li>
 <li><strong>Run it cold, 45 s.</strong> Type a target; five scouts run concurrently; records accumulate.</li>
-<li><strong>The joins, 60 s.</strong> Scaffold match and set difference — what no single query returns.</li>
+<li><strong>Harmonisation, 60 s.</strong> The same molecule under two identifiers pooled into one count, and the receptor chosen by scaffold match — neither available from one query.</li>
 <li><strong>The loop, 90 s.</strong> The dossier commits to an assessment, the feasibility checks run, the recommendation changes. Two targets side by side, two different next steps. <em>Most time here — first judging criterion, and the one most projects will not have.</em></li>
 <li><strong>The resolver firing, 30 s.</strong> A claim demoted from Verified to Inferred because its identifier did not resolve.</li>
 <li><strong>Open a claim, 30 s.</strong> Click any answer; show the exact query, output hash, source date and retrieval timestamp. Inspectability answered in one gesture.</li>
@@ -848,9 +857,9 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <td>Most likely failure. Each of the five answers must be one committed choice with a reason</td>
 </tr>
 <tr>
-<td>The joins find nothing on the cold target</td>
-<td>No scaffold match, no disjoint set</td>
-<td>Report it. "No congeneric series, no held-out set, do not proceed" is a correct and useful output. Keep sortilin as the positive example</td>
+<td>Harmonisation finds nothing on the cold target</td>
+<td>No scaffold match, no compounds shared between sources</td>
+<td>Report it. "No congeneric series, no design-quality structure, do not proceed" is a correct and useful output. Keep sortilin as the positive example</td>
 </tr>
 <tr>
 <td>Fabricated identifiers pass as verified</td>
@@ -860,7 +869,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <tr>
 <td>Compound counts are wrong</td>
 <td>Activity records reported as distinct compounds</td>
-<td>Reconciliation is a named join, not a convention</td>
+<td>Reconciliation is a named harmonisation step emitting its own graded record, not a convention</td>
 </tr>
 <tr>
 <td>Someone runs a structure-based calculation</td>
@@ -882,7 +891,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
 <h2 id="provenance">Provenance</h2>
 <p>Compiled 15 August 2026. The sortilin dossier in section 5 is real output from a reference run of five concurrent research agents: 1,086,955 tokens, 436 tool calls, 131 minutes of agent work in 39 minutes of wall clock.</p>
 <p>Design decisions in sections 1, 4 and 6 are grounded in three systems read in full: Gottweis et al., <em>Nature</em> 655, 487–496 (2026); Ghareeb et al., <em>Nature</em> 655, 497–505 (2026); Aygün et al., <em>Nature</em> 654, 909–916 (2026). Where their reported evidence is weak — self-evaluated ranking metrics, small expert panels, constructed speedup baselines — this roadmap says so rather than borrowing the claim.</p>
-<p>Unverified: InChIKey disjointness between training and holdout, which the feasibility checks will settle; the judging rubric, prizes and judge roster, which are not published. Docking tractability is assessed from structure and data, never demonstrated — no docking is run by this project. Confirm the submission time against the acceptance email.</p>
+<p>Unverified: the judging rubric, prizes and judge roster, which are not published. Docking tractability is assessed from structure and data, never demonstrated — no docking is run by this project. Confirm the submission time against the acceptance email.</p>
 </div>
 </body>
 </html>

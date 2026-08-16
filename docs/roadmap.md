@@ -1,8 +1,8 @@
 # Roadmap — target dossier agent
 
 Input: a protein target. Output: a graded answer to **whether this target is tractable
-for structure-based small-molecule drug design** — with the receptor, the training set
-and the validation set already chosen, or a stated reason not to proceed.
+for structure-based small-molecule drug design** — with the receptor and the compound
+series already chosen, or a stated reason not to proceed.
 
 The agent runs no structure-based calculation of any kind — no docking, no free-energy
 methods, no molecular dynamics. It assesses tractability from public structural and
@@ -21,7 +21,8 @@ Five questions, then stop:
    measured activity, potency range, assay types.
 3. **Is there a congeneric series?** A related set supporting SAR reasoning, not
    scattered singletons.
-4. **What can serve as a held-out validation set?** Ideally separated by time.
+4. **Is anyone still working on this target?** The date of the most recent measurement,
+   reported alongside the checks and never gating them.
 5. **What is missing?** A list, with the observation that would change the answer.
 
 The pipeline is **fixed, not planned per question**. Same five scouts, same sources,
@@ -36,9 +37,9 @@ target is the only variable.
 
 ### Where the value is
 
-Any single query returns a list. The value is in the **joins between sources** — facts
-no individual scout produces. Two such joins decided the whole downstream plan for
-sortilin (section 4).
+Any single query returns a list. The value is in **reconciling the sources** — deciding
+when two entries are the same molecule, the same protein or the same evidence. Every
+headline count in the dossier is wrong without it (section 4).
 
 ## 2. Closing the loop
 
@@ -46,9 +47,9 @@ A dossier that only recommends is a report. The loop is what makes it an agent: 
 dossier commits to an assessment, then names checks it has not yet computed. The checks
 run over the retrieved data, and the result rewrites the recommendation.
 
-![One commitment at the top; three check outcomes below it, each producing a different recommendation, with the effect on the original named in the right-hand column](figures/loop.svg)
+![One commitment at the top; four check outcomes below it, each producing a different recommendation, with the effect on the original named in the right-hand column](figures/loop.svg)
 
-*Read it top to bottom. The agent writes the boxed commitment first, before it can see any of the numbers. The five checks then run, and two of the three possible outcomes overturn what it committed to — one narrows the validation claim, the other reverses the recommendation entirely. The right-hand column names the effect so the change is legible without re-reading the top box.*
+*Read it top to bottom. The agent writes the boxed commitment first, before it can see any of the numbers. The four checks then run, and three of the four possible outcomes change what it committed to — one narrows the recommendation to triage work, two reverse it. The right-hand column names the effect so the change is legible without re-reading the top box.*
 
 **Data splitting is deliberately absent.** Whether a future model could be cleanly
 validated is a planning detail for whoever picks the work up; it says nothing about
@@ -60,11 +61,11 @@ thinner than it is. All sources are pooled on canonical identity instead. See
 and molecular dynamics are all out of scope — no GPU budget. But the loop does not need
 them. It needs a measurement the agent has not already seen, and the feasibility checks
 are exactly that: the assessment commits first, the numbers are computed second, and they
-can contradict it. All five run in RDKit on a laptop in seconds.
+can contradict it. All of them run in RDKit on a laptop in seconds.
 
 | Check | Computed from | Flips the recommendation when |
 |---|---|---|
-| Series size and scaffold diversity | Murcko scaffolds over the retrieved series | One scaffold, or fewer than ~20 analogs — SAR reasoning is unsupportable |
+| Series depth | Murcko scaffolds and InChIKeys over the retrieved series | Fewer than 20 analogs, duplicates among them, or fewer than 15 on the dominant scaffold — SAR reasoning is unsupportable. Scaffold *count* is deliberately not a criterion; see `DESIGN.md` D1 |
 | Activity range | max/min pActivity in the series | Span < 2 log units — nothing to rank |
 | Receptor ligand quality | MW and heavy-atom count of the bound ligand | Below drug-like — the pocket is defined by a fragment or an additive |
 | Field activity | Date of the most recent measurement | Reported only — never changes the recommendation |
@@ -76,9 +77,9 @@ between them, the loop is decorative and should be reported as such.**
 
 ## 3. The pipeline
 
-![Target fans out to five source-bound scouts, through the resolver gate and join stage, to a dossier](figures/pipeline.svg)
+![Target fans out to five source-bound scouts, through the resolver gate and the harmonisation stage, to a dossier](figures/pipeline.svg)
 
-*The decomposition is fixed, not planned. The same five scouts run against the same sources for any target, so the only variable is the input. Each returns typed records rather than prose, which is what allows the join stage to operate on them mechanically instead of by re-reading summaries. Nothing reaches the join stage until its citation has been fetched and checked — see section 5.*
+*The decomposition is fixed, not planned. The same five scouts run against the same sources for any target, so the only variable is the input. Each returns typed records rather than prose, which is what allows the harmonisation stage to operate on them mechanically instead of by re-reading summaries. Nothing reaches that stage until its citation has been fetched and checked — see section 5.*
 
 ![Reference run concurrency: 131 minutes of agent work in 39 minutes of wall clock](figures/concurrency.svg)
 
@@ -94,7 +95,7 @@ between them, the loop is decorative and should be reported as such.**
 
 ## 4. Harmonisation
 
-![The two cross-source joins, with their real identifiers](figures/joins.svg)
+![Three kinds of sameness resolved across sources, with receptor selection kept separate as an inference](figures/harmonise.svg)
 
 *Five databases describe overlapping reality in incompatible ways. Before any count means anything, three kinds of sameness have to be resolved.*
 
@@ -165,24 +166,25 @@ required, always-rendered gap list is the cheapest part of this build and has no
 | Which receptor? | PDB 6X48, 2.9 Å, chosen over the higher-resolution 5MRI (2.00 Å) because ligand UP4 shares the core of the series. **2.9 Å is marginal for structure-guided optimisation** — adequate for triage and shape work, not for modelling individual contacts. Both are handed off | Verified |
 | Chemical matter? | 266 activities in CHEMBL3091, 37 in CHEMBL4680051. IC50 88 nM – 158 µM, median 1.4 µM. Six MST-derived Kd near 1 nM are outliers, excluded | Measured |
 | Congeneric series? | Yes — 106 cpds on a 5,5-dimethyl-L-norleucine core, 77 sub-µM, one patent family | Verified |
-| Held-out set? | PubChem AID 2202264, priority Sep 2021, absent from ChEMBL. Time split, pending InChIKey disjointness | Inferred |
-| What is missing? | Disjointness unconfirmed; no deposited progranulin HTS found; no docking has been run by anyone here, so tractability is assessed from structure and data, not demonstrated; latozinemab raised progranulin and missed its Phase 3 endpoint Oct 2025 | Unverified |
+| Still active? | Most recent measurement 2021 (PubChem AID 2202264, priority Sep 2021, absent from ChEMBL and pooled in). Five years, well inside the ten-year dormancy flag | Verified |
+| What is missing? | No deposited progranulin HTS found; no docking has been run by anyone here, so tractability is assessed from structure and data, not demonstrated; latozinemab raised progranulin and missed its Phase 3 endpoint Oct 2025 | Unverified |
 
 **Recommendation: sortilin is tractable for structure-based design. Proceed on 6X48,
 with a resolution caveat.** The target clears the bar that kills most such projects — a
 pocket with drug-like ligands bound, a congeneric series spanning two logs of potency, and
-a validation set separated by time. At 2.9 Å it supports triage and shape-based work;
+published work recent enough to be live. At 2.9 Å it supports triage and shape-based work;
 contact-level optimisation needs either 5MRI, which is not chemotype-matched, or a new
 structure.
 
 **Hand-off specification:** receptor 6X48, box defined from the co-crystallized UP4
-ligand; training set ChEMBL SORT1 published ≤2020; prospective validation on PubChem
-AID 2202264; fall back to 5MRI at 2.00 Å if pose quality on 6X48 proves inadequate.
+ligand; the series pooled on InChIKey across ChEMBL SORT1 and PubChem AID 2202264; fall
+back to 5MRI at 2.00 Å if pose quality on 6X48 proves inadequate. How that series is
+partitioned for any downstream model is left to whoever picks the work up — see
+`DESIGN.md` D8.
 
-**Failure condition:** if InChIKey disjointness fails, the prospective validation claim is
-withdrawn and the hand-off specifies a scaffold split instead. If the series collapses to
-a single Murcko scaffold or spans under two log units of activity, the recommendation
-inverts to *not yet ready for structure-based design*.
+**Failure condition:** if fewer than 20 distinct analogs survive pooling, or fewer than 15
+sit on the dominant scaffold, or the series spans under two log units of activity, the
+recommendation inverts to *not yet ready for structure-based design*.
 
 Downstream of a go decision, the design loop was measured during scoping: 963 analogs
 generated, 823 surviving structural-alert and property gates, scored across 104 ADMET
@@ -225,9 +227,9 @@ PET tracers rather than pocket co-crystals.
 
 | Criterion | How the design answers it | Standing |
 | --- | --- | --- |
-| **Closing the loop** — does the agent analyze data it hasn't seen and propose a next experiment that changes when the results change? | Section 2. The dossier commits to an assessment, then five feasibility checks are computed over the retrieved data and can contradict it; each of three outcomes yields a different next step. Run on two targets, one of which fails a check, so the change is demonstrated rather than asserted | Was the gap |
-| **Inspectability** — can you reconstruct why the agent concluded what it did? | Every record stores the exact query or command, an output hash for Measured claims, the source document's date alongside the retrieval timestamp, and an evidence grade. Each join emits its own graded record, so a conclusion traces to the specific cross-reference behind it | Strong |
-| **Validation** — how do you know the output is correct, by some standard outside the agent's own reasoning? | Three external standards: the resolver gate fetches every cited identifier and confirms the quoted value; the feasibility checks are deterministic computations the agent cannot argue with; the holdout series post-dates and is absent from all training data. No component ranks claims by asking a model which it prefers | Strong |
+| **Closing the loop** — does the agent analyze data it hasn't seen and propose a next experiment that changes when the results change? | Section 2. The dossier commits to an assessment, then four feasibility checks are computed over the retrieved data and can contradict it; each of four outcomes yields a different next step. Run on two targets, one of which fails a check, so the change is demonstrated rather than asserted | Was the gap |
+| **Inspectability** — can you reconstruct why the agent concluded what it did? | Every record stores the exact query or command, an output hash for Measured claims, the source document's date alongside the retrieval timestamp, and an evidence grade. Each harmonisation step emits its own graded record, so a conclusion traces to the specific reconciliation behind it | Strong |
+| **Validation** — how do you know the output is correct, by some standard outside the agent's own reasoning? | Three external standards: the resolver gate fetches every cited identifier and confirms the quoted value; the feasibility checks are deterministic computations the agent cannot argue with; every pooled compound count is reconciled against a second source rather than taken from one. No component ranks claims by asking a model which it prefers | Strong |
 | **Creative use of sponsor tools** | Paperclip (the host's own tool) supplies the resolver's fetch-and-confirm layer via its virtual filesystem, where every document is a directory of full text, sections and figures. ChEMBL and PubMed MCP back two of the five scouts. No GPU compute is used — the assessment is retrieval plus deterministic cheminformatics, which is why it runs on a laptop | Tied to criteria 2 and 3 |
 
 Every sponsor integration earns its place against another criterion. Paperclip is used
@@ -246,11 +248,11 @@ its reasoning easy to inspect."* Contact: vanessa@gxl.ai.
 | Sat 17:30–18:30 | **Record schema and store.** Claim, value, grade, *resolvable* source id. Two dates (source date, retrieval timestamp). Exact query/command + output hash for Measured. Token/tool-call/wall-clock counters |
 | Sat 18:30–20:00 | **The five scouts.** ChEMBL, PubMed, bioRxiv already connected via MCP; Paperclip working at v0.7.36. **No spawn tool in any brief** — a scout needing a sub-search returns `requested_subdomain`. Per-scout deadline; on expiry the domain enters the dossier as "not retrieved" and the run completes |
 | Sat 20:00–22:00 | **Resolver gate.** Highest-value block. Every Verified/Documented identifier fetched independently and the quoted value confirmed. Failures demote to Inferred and flag |
-| Sat 22:00–23:30 | **Join stage.** RDKit substructure matching, InChIKey set ops, alias resolution, record-vs-compound reconciliation. Each join emits its own graded record |
+| Sat 22:00–23:30 | **Harmonisation stage.** InChIKey pooling, alias resolution, record-vs-compound reconciliation, and — kept separate — RDKit substructure matching for receptor selection. Each emits its own graded record |
 | Sat 23:30–00:45 | **Dossier renderer.** Five answers with grades and identifiers, gap list, recommendation with failure condition, cost line. Gap section renders even when empty |
-| Sun 00:45–01:45 | **Replicate decision-critical answers.** Receptor choice and holdout disjointness, three fresh contexts each, agreement reported as a number. Robin runs 8 independent trajectories for this reason; ERA shows replicate spread 0.13–0.59 on the same method |
+| Sun 00:45–01:45 | **Replicate decision-critical answers.** Receptor choice and the pooled compound count, three fresh contexts each, agreement reported as a number. Robin runs 8 independent trajectories for this reason; ERA shows replicate spread 0.13–0.59 on the same method |
 | Sun 01:45–07:00 | Sleep, scheduled rather than optional |
-| Sun 07:00–08:00 | **Close the loop, both branches.** Compute the five feasibility checks, feed them back, regenerate the dossier. Run on two targets, one of which fails a check, and capture the two different next steps. RDKit only — no GPU, no container, no Modal. This block answers the first judging criterion and nothing else in the build does |
+| Sun 07:00–08:00 | **Close the loop, both branches.** Compute the four feasibility checks, feed them back, regenerate the dossier. Run on two targets, one of which fails a check, and capture the two different next steps. RDKit only — no GPU, no container, no Modal. This block answers the first judging criterion and nothing else in the build does |
 | Sun 08:00–09:30 | **Second target, cold.** Never used during development; keep whatever it produces including a negative. Cathepsin L is the natural choice, being the protease that processes progranulin |
 | Sun 09:30–10:15 | Code freeze. Pre-compute both dossiers, cache figures, rehearse twice against a timer |
 | Sun 10:15–10:45 | Submit |
@@ -268,7 +270,8 @@ its reasoning easy to inspect."* Contact: vanessa@gxl.ai.
 1. **The task, 25 s.** Assembling a target dossier by hand takes a computational
    chemist several days. State the input and the five questions.
 2. **Run it cold, 45 s.** Type a target; five scouts run concurrently; records accumulate.
-3. **The joins, 60 s.** Scaffold match and set difference — what no single query returns.
+3. **Harmonisation, 60 s.** The same molecule under two identifiers pooled into one
+   count, and the receptor chosen by scaffold match — neither available from one query.
 4. **The loop, 90 s.** The dossier commits to an assessment, the feasibility checks run,
    the recommendation changes. Two targets side by side, two different next steps.
    *Most time here — first judging criterion, and the one most projects will not have.*
@@ -285,9 +288,9 @@ its reasoning easy to inspect."* Contact: vanessa@gxl.ai.
 | --- | --- | --- |
 | The loop does not actually loop | The revised dossier proposes the same next step regardless of the check results | The criterion this build most depends on. Test on a target that fails a check. If the recommendation is invariant, say so on stage — a reported negative is survivable, a discovered one is not |
 | The dossier reads as a literature review | Sections summarize rather than answer | Most likely failure. Each of the five answers must be one committed choice with a reason |
-| The joins find nothing on the cold target | No scaffold match, no disjoint set | Report it. "No congeneric series, no held-out set, do not proceed" is a correct and useful output. Keep sortilin as the positive example |
+| Harmonisation finds nothing on the cold target | No scaffold match, no compounds shared between sources | Report it. "No congeneric series, no design-quality structure, do not proceed" is a correct and useful output. Keep sortilin as the positive example |
 | Fabricated identifiers pass as verified | A citation looks plausible and resolves to nothing | The resolver gate is not optional and not a scout behaviour. This is the failure that would most damage credibility if a judge checked a reference on stage |
-| Compound counts are wrong | Activity records reported as distinct compounds | Reconciliation is a named join, not a convention |
+| Compound counts are wrong | Activity records reported as distinct compounds | Reconciliation is a named harmonisation step emitting its own graded record, not a convention |
 | Someone runs a structure-based calculation | "It's only an hour on Modal" | Out of scope by decision, not by oversight. No GPU budget; `pip install vina` has no Apple Silicon wheel. The agent assesses SBDD tractability and does not perform SBDD. Reinstating it costs the loop its only free measurement |
 | A scout hangs | One source never returns | Per-scout deadline, domain marked unretrieved. A missing source is a gap-list entry, not a crash. One agent hung in the reference run |
 | Repository access | Pull-only permission upstream | Fork and open PRs, or request collaborator access. Resolve before the first commit |
@@ -304,7 +307,6 @@ Gottweis et al., *Nature* 655, 487–496 (2026); Ghareeb et al., *Nature* 655, 4
 weak — self-evaluated ranking metrics, small expert panels, constructed speedup
 baselines — this roadmap says so rather than borrowing the claim.
 
-Unverified: InChIKey disjointness between training and holdout, which the feasibility
-checks will settle; the judging rubric, prizes and judge roster, which are not published.
+Unverified: the judging rubric, prizes and judge roster, which are not published.
 Docking tractability is assessed from structure and data, never demonstrated — no docking
 is run by this project. Confirm the submission time against the acceptance email.

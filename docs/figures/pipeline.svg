@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="396" viewBox="0 0 980 396" role="img" aria-label="A target identifier fans out to five scouts bound to specific databases; their structured findings pass through a join stage that cross-references them, producing a dossier on which a scientist makes a go or no-go decision.">
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="396" viewBox="0 0 980 396" role="img" aria-label="A target identifier fans out to five scouts bound to specific databases; their structured findings pass through a harmonisation stage that reconciles them, producing a dossier on which a scientist makes a go or no-go decision.">
       <defs>
         <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0,1 L9,5 L0,9 z" fill="#6B7280"/>
@@ -41,14 +41,15 @@
         <text x="502" y="110" font-size="12">Resolve citations</text>
         <text x="502" y="128" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">fetch · confirm span · demote</text>
 
-        <rect x="486" y="164" width="182" height="112" rx="3" fill="none" stroke="#7C89E8" stroke-width="1.8"/>
-        <text x="577" y="188" text-anchor="middle" fill="#7C89E8">Join</text>
+        <rect x="486" y="164" width="182" height="94" rx="3" fill="none" stroke="#7C89E8" stroke-width="1.8"/>
+        <text x="577" y="188" text-anchor="middle" fill="#7C89E8">Harmonise</text>
         <g font-size="10.5" fill="#7C89E8" opacity=".85" font-family="ui-monospace, Menlo, monospace">
-          <text x="502" y="210">scaffold ↔ ligand</text>
-          <text x="502" y="228">InChIKey set ops</text>
-          <text x="502" y="246">alias resolution</text>
-          <text x="502" y="264">record vs compound</text>
+          <text x="502" y="210">pool compounds</text>
+          <text x="502" y="228">alias resolution</text>
+          <text x="502" y="246">record vs compound</text>
         </g>
+        <rect x="486" y="264" width="182" height="26" rx="3" fill="none" stroke="#C0714F" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <text x="502" y="281" font-size="10.5" fill="#C0714F" font-family="ui-monospace, Menlo, monospace">receptor: scaffold match</text>
         <line x1="577" y1="148" x2="577" y2="158" stroke="#6B7280" stroke-width="1.4" marker-end="url(#a1)"/>
 
         <!-- dossier -->
@@ -76,7 +77,8 @@
           <path d="M424,254 C452,254 452,126 480,121"/>
           <path d="M424,322 C452,322 452,130 480,123"/>
         </g>
-        <line x1="668" y1="220" x2="710" y2="192" stroke="#6B7280" stroke-width="1.4" marker-end="url(#a1)"/>
+        <line x1="668" y1="212" x2="710" y2="190" stroke="#6B7280" stroke-width="1.4" marker-end="url(#a1)"/>
+        <path d="M668,277 C692,277 692,222 710,214" stroke="#C0714F" stroke-width="1.2" fill="none" stroke-dasharray="4 3" marker-end="url(#a1)"/>
         <line x1="842" y1="186" x2="884" y2="186" stroke="#6B7280" stroke-width="1.4" marker-end="url(#a1)"/>
 
         <text x="440" y="368" text-anchor="middle" font-size="11" opacity=".65">every scout returns typed records with a resolvable source identifier and an evidence grade</text>

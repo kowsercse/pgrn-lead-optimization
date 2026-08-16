@@ -28,7 +28,7 @@ def feas():
 
 
 def proposal():
-    return next_step(feas(), Handoff("1ABC", "2DEF", "LIG", "ACC1", "AID1"))
+    return next_step(feas(), Handoff("1ABC", "2DEF", "LIG", ("ACC1", "AID1")))
 
 
 def page(**over):

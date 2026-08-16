@@ -47,7 +47,7 @@
   - Expected best resolution: 2.9 Å
   - Expected recommendation qualifier: triage-only
   - Expected site-defining ligand: UP4
-  - Expected training sets: CHEMBL3091, CHEMBL4680051
+  - Expected public compound sources: CHEMBL3091, CHEMBL4680051
   - Expected additional source: PubChem AID 2202264, pooled with the public set
   - Expected additional-source size: 106 compounds
   - Expected series core: 5,5-dimethyl-L-norleucine

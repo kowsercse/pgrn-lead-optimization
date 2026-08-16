@@ -233,8 +233,8 @@ gap list and the expand-a-claim interaction are the inspectability criterion.
    every one of the four outcomes reachable. Deterministic, offline, under one second.
 
 3. **Loop and dossier v2** (45 min) — regenerate with the revised recommendation and the
-   hand-off spec: receptor, resolution, method, site origin, train accession, holdout
-   accession, fallback receptor, resolution qualifier.
+   hand-off spec: receptor, resolution, method, site origin, the pooled series
+   accessions, fallback receptor, resolution qualifier.
 
 ### Exit gate
 
