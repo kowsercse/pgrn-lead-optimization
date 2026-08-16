@@ -36,9 +36,13 @@ for the underlying flow.
   co-crystallized ligand — including RCSB's "UNL" placeholder, which even
   `allow_bad_residues` can't parameterize) are stripped before docking
   (`workflows/tools/common.strip_heteroatoms`)
+- Done: `filter_hits` — RDKit PAINS filtering + Butina scaffold-diversity
+  clustering on Morgan fingerprints, live-verified
+- Done: `predict_admet` — RDKit Lipinski Ro5 + QED proxy (no proto-tools
+  ADMET tool exists), live-verified; pass/fail thresholds config-driven
 - Done: runtime parameters (target IDs, thresholds, engine choices) moved to
   `python/config.yaml`, loaded via `python/workflows/config.py`
-- Stub: all other tools (2 remaining)
+- Stub: `rank_and_handoff` (1 remaining)
 
 ## Stage 1 — Structural foundation
 
@@ -70,11 +74,11 @@ for the underlying flow.
 
 ## Stage 4 — Triage + ADMET
 
-- [ ] `filter_hits` — PAINS filtering + scaffold-diversity clustering on
-  docking results
-- [ ] `predict_admet` — no proto-tools ADMET tool identified yet; needs a
-  source (RDKit descriptor-based proxy, or an external ADMET service) —
-  open question, revisit at this stage
+- [x] `filter_hits` — RDKit PAINS filter catalog + Butina clustering
+  (`hit_triage.pains_filter`, `hit_triage.diversity_cluster_cutoff`, `hit_triage.top_n`)
+- [x] `predict_admet` — RDKit descriptor-based proxy (Lipinski Ro5
+  violations + QED); no proto-tools ADMET tool exists
+  (`admet.lipinski_violations_max`, `admet.qed_min`)
 
 ## Stage 5 — Prioritization + runtime validation
 

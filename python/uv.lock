@@ -3258,6 +3258,7 @@ dependencies = [
     { name = "esm" },
     { name = "proto-tools" },
     { name = "pyyaml" },
+    { name = "rdkit" },
     { name = "requests" },
 ]
 
@@ -3268,6 +3269,7 @@ requires-dist = [
     { name = "esm", git = "https://github.com/Biohub/esm.git?rev=main" },
     { name = "proto-tools", git = "https://github.com/evo-design/proto-tools.git" },
     { name = "pyyaml", specifier = ">=6.0" },
+    { name = "rdkit", specifier = ">=2024.9" },
     { name = "requests", specifier = ">=2.32" },
 ]
 

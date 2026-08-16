@@ -24,10 +24,12 @@ import os
 from conductor.ai.agents import Agent, AgentRuntime, mcp_tool, tool
 
 from workflows.config import load_config
+from workflows.tools.admet import predict_admet
 from workflows.tools.interface import map_interface_pocket
 from workflows.tools.ligands import search_known_ligands
 from workflows.tools.screening import assemble_screening_library, dock_library, validate_positive_controls
 from workflows.tools.structure import fetch_pdb_structure, predict_complex_structure, score_structure_quality
+from workflows.tools.triage import filter_hits
 
 CONFIG = load_config()
 LLM_MODEL = os.environ.get("CONDUCTOR_AGENT_LLM_MODEL", CONFIG.llm_model)
@@ -126,12 +128,7 @@ screening_agent = Agent(
 
 
 # ── 6. Hit triage ─────────────────────────────────────────────────────
-
-@tool
-def filter_hits(docking_results: dict) -> dict:
-    """Filter docking hits by score, pose plausibility, PAINS, and diversity."""
-    raise NotImplementedError("TODO: hit filtering/clustering")
-
+# Tool implemented in workflows/tools/triage.py (config-driven: `hit_triage.*`).
 
 triage_agent = Agent(
     name="triage_agent",
@@ -146,12 +143,7 @@ triage_agent = Agent(
 
 
 # ── 7. ADMET profiling ────────────────────────────────────────────────
-
-@tool
-def predict_admet(compounds: dict) -> dict:
-    """Predict ADMET properties for a set of compounds."""
-    raise NotImplementedError("TODO: ADMET prediction")
-
+# Tool implemented in workflows/tools/admet.py (config-driven: `admet.*`).
 
 admet_agent = Agent(
     name="admet_agent",
