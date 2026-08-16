@@ -28,6 +28,8 @@ DEADLINE_S = 180
 _SEARCH = "https://search.rcsb.org/rcsbsearch/v2/query"
 _ENTRY = "https://data.rcsb.org/rest/v1/core/entry/{pdb_id}"
 _COMP = "https://data.rcsb.org/rest/v1/core/chemcomp/{het}"
+_NONPOLY = ("https://data.rcsb.org/rest/v1/core/nonpolymer_entity/"
+            "{pdb_id}/{entity_id}")
 _WEB = "https://www.rcsb.org/structure/{pdb_id}"
 
 
@@ -122,10 +124,18 @@ def fetch_hit(pdb_id: str, *, timeout: float = 30) -> StructureHit:
     entry = requests.get(_ENTRY.format(pdb_id=pdb_id), timeout=timeout)
     entry.raise_for_status()
     payload = entry.json()
-    hets = payload.get("rcsb_entry_container_identifiers", {}).get("non_polymer_entity_ids") or []
+
+    # HET codes are NOT on the entry payload — `pdbx_entity_nonpoly` is absent there.
+    # Each non-polymer entity must be fetched by id, then its component by HET code.
+    entity_ids = (payload.get("rcsb_entry_container_identifiers", {})
+                  .get("non_polymer_entity_ids") or [])
     comps: list[dict[str, Any]] = []
-    for het in payload.get("pdbx_entity_nonpoly", []) if hets else []:
-        code = het.get("comp_id")
+    for entity_id in entity_ids:
+        e = requests.get(_NONPOLY.format(pdb_id=pdb_id, entity_id=entity_id),
+                         timeout=timeout)
+        if not e.ok:
+            continue
+        code = e.json().get("pdbx_entity_nonpoly", {}).get("comp_id")
         if not code:
             continue
         c = requests.get(_COMP.format(het=code), timeout=timeout)
