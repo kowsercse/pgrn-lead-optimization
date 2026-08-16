@@ -1,0 +1,451 @@
+#!/usr/bin/env python3
+"""nora — local dev process manager for pgrn-lead-optimization.
+
+See spec/nora-tool-spec.md. Bootstraps and runs the 3 local processes this
+project needs: the Conductor OSS server (released jar), the Python agent
+worker, and the UI dev server.
+
+Usage:
+    ./nora setup                                   # download + install everything
+    ./nora server {start|stop|restart|status|logs}
+    ./nora worker {start|stop|restart|status|logs}
+    ./nora ui     {start|stop|build|restart|status|logs}
+    ./nora start | stop | status                   # all three together
+    ./nora logs <server|worker|ui>
+"""
+
+import argparse
+import os
+import platform
+import signal
+import subprocess
+import sys
+import tarfile
+import time
+import urllib.request
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent
+NORA_HOME = Path(os.environ.get("NORA_HOME", Path.home() / ".nora"))
+STATE_DIR = REPO_ROOT / ".nora"
+PID_DIR = STATE_DIR / "pids"
+LOG_DIR = STATE_DIR / "logs"
+
+CONDUCTOR_VERSION = os.environ.get("CONDUCTOR_VERSION", "latest")
+CONDUCTOR_JAR_URL = f"https://conductor-server.s3.us-east-2.amazonaws.com/conductor-server-{CONDUCTOR_VERSION}.jar"
+JDK_FEATURE_VERSION = 21
+DEFAULT_SERVER_PORT = 8080
+COMPONENTS = ("server", "worker", "ui")
+
+
+def _log(message: str) -> None:
+    print(f"[nora] {message}")
+
+
+def _ensure_dirs() -> None:
+    NORA_HOME.mkdir(parents=True, exist_ok=True)
+    PID_DIR.mkdir(parents=True, exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _download(url: str, dest: Path, label: str) -> None:
+    if dest.exists():
+        _log(f"{label} already downloaded at {dest}")
+        return
+    _log(f"downloading {label} from {url} (this may take a few minutes)")
+
+    # Adoptium's WAF 403s on urllib's default "Python-urllib/x.y" User-Agent
+    # specifically; any other UA (including this one) passes.
+    request = urllib.request.Request(url, headers={"User-Agent": "nora/1.0"})
+    tmp = dest.with_suffix(dest.suffix + ".part")
+    try:
+        with urllib.request.urlopen(request) as response, tmp.open("wb") as out:
+            total = int(response.headers.get("Content-Length", 0))
+            written = 0
+            while chunk := response.read(1024 * 1024):
+                out.write(chunk)
+                written += len(chunk)
+                if total:
+                    print(f"\r[nora] {label}: {written * 100 // total}%", end="", flush=True)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+    print()
+    tmp.rename(dest)
+    _log(f"downloaded {label} to {dest}")
+
+
+# ── Temurin JDK 21 ────────────────────────────────────────────────────────
+
+
+def _adoptium_platform() -> tuple[str, str]:
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+    os_map = {"darwin": "mac", "linux": "linux"}
+    arch_map = {"arm64": "aarch64", "aarch64": "aarch64", "x86_64": "x64", "amd64": "x64"}
+    if system not in os_map:
+        raise SystemExit(f"nora: unsupported OS {system!r} — mac/linux only (see spec/nora-tool-spec.md)")
+    if machine not in arch_map:
+        raise SystemExit(f"nora: unsupported architecture {machine!r}")
+    return os_map[system], arch_map[machine]
+
+
+def _jdk_home() -> Path | None:
+    jdk_dir = NORA_HOME / "jdk-21"
+    if not jdk_dir.exists():
+        return None
+    for candidate in jdk_dir.glob("*"):
+        mac_home = candidate / "Contents" / "Home"
+        if (mac_home / "bin" / "java").exists():
+            return mac_home
+        if (candidate / "bin" / "java").exists():
+            return candidate
+    return None
+
+
+def ensure_jdk() -> Path:
+    home = _jdk_home()
+    if home:
+        return home
+    _ensure_dirs()
+    os_name, arch = _adoptium_platform()
+    url = f"https://api.adoptium.net/v3/binary/latest/{JDK_FEATURE_VERSION}/ga/{os_name}/{arch}/jdk/hotspot/normal/eclipse"
+    jdk_dir = NORA_HOME / "jdk-21"
+    jdk_dir.mkdir(parents=True, exist_ok=True)
+    archive = NORA_HOME / "temurin-21.tar.gz"
+    _download(url, archive, "Temurin JDK 21")
+    _log("extracting Temurin JDK 21")
+    with tarfile.open(archive) as tar:
+        tar.extractall(jdk_dir)
+    archive.unlink()
+    home = _jdk_home()
+    if not home:
+        raise SystemExit("nora: extracted JDK but couldn't find its java binary")
+    return home
+
+
+# ── Conductor OSS server jar ──────────────────────────────────────────────
+
+
+def ensure_conductor_jar() -> Path:
+    _ensure_dirs()
+    jar_path = NORA_HOME / f"conductor-server-{CONDUCTOR_VERSION}.jar"
+    _download(CONDUCTOR_JAR_URL, jar_path, f"Conductor server ({CONDUCTOR_VERSION})")
+    return jar_path
+
+
+# ── .env ──────────────────────────────────────────────────────────────────
+
+
+def read_env_file() -> dict[str, str]:
+    env_path = REPO_ROOT / ".env"
+    values: dict[str, str] = {}
+    if not env_path.exists():
+        return values
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        values[key.strip()] = value.strip()
+    return values
+
+
+# ── process management ───────────────────────────────────────────────────
+
+
+def _pid_file(name: str) -> Path:
+    return PID_DIR / f"{name}.pid"
+
+
+def _log_file(name: str) -> Path:
+    return LOG_DIR / f"{name}.log"
+
+
+def _read_pid(name: str) -> int | None:
+    pid_file = _pid_file(name)
+    if not pid_file.exists():
+        return None
+    try:
+        pid = int(pid_file.read_text().strip())
+    except ValueError:
+        pid_file.unlink(missing_ok=True)
+        return None
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        pid_file.unlink(missing_ok=True)
+        return None
+    return pid
+
+
+def _start_process(name: str, cmd: list[str], cwd: Path | None = None, env: dict | None = None) -> None:
+    existing = _read_pid(name)
+    if existing:
+        _log(f"{name} already running (pid {existing})")
+        return
+    _ensure_dirs()
+    log_path = _log_file(name)
+    with log_path.open("a") as log:
+        process = subprocess.Popen(
+            cmd,
+            cwd=cwd,
+            env=env,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    _pid_file(name).write_text(str(process.pid))
+    _log(f"{name} started (pid {process.pid}), logs: {log_path}")
+
+
+def _stop_process(name: str, timeout: float = 15.0) -> None:
+    pid = _read_pid(name)
+    if not pid:
+        _log(f"{name} not running")
+        return
+    _log(f"stopping {name} (pid {pid})")
+    try:
+        # SIGINT, not SIGTERM: the python worker's runtime only triggers
+        # graceful shutdown on Ctrl+C (SIGINT) — see its "Press Ctrl+C to
+        # stop" log line. SIGINT is a fine first signal for the java server
+        # and npm/vite too.
+        os.killpg(os.getpgid(pid), signal.SIGINT)
+    except OSError:
+        pass
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if not _read_pid(name):
+            break
+        time.sleep(0.5)
+    else:
+        _log(f"{name} still running after {timeout:g}s, sending SIGKILL")
+        try:
+            os.killpg(os.getpgid(pid), signal.SIGKILL)
+        except OSError:
+            pass
+    _pid_file(name).unlink(missing_ok=True)
+    _log(f"{name} stopped")
+
+
+def _status(name: str) -> None:
+    pid = _read_pid(name)
+    _log(f"{name}: {'running (pid ' + str(pid) + ')' if pid else 'stopped'}")
+
+
+def _tail_logs(name: str) -> None:
+    log_path = _log_file(name)
+    if not log_path.exists():
+        _log(f"no logs yet for {name}")
+        return
+    subprocess.run(["tail", "-f", str(log_path)])
+
+
+# ── server ────────────────────────────────────────────────────────────────
+
+
+def _wait_for_server_health(port: int, timeout: float = 90.0) -> bool:
+    # Not /actuator/health: its aggregate status goes DOWN if the optional
+    # Elasticsearch indexer isn't reachable, even though the core API (the
+    # only thing this project needs) is already up. /api/health reflects that.
+    request = urllib.request.Request(f"http://localhost:{port}/api/health")
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if not _read_pid("server"):
+            return False  # process died before coming up
+        try:
+            with urllib.request.urlopen(request, timeout=2) as response:
+                if response.status == 200:
+                    return True
+        except OSError:
+            pass
+        time.sleep(2)
+    return False
+
+
+def server_start(port: int) -> None:
+    jdk_home = ensure_jdk()
+    jar_path = ensure_conductor_jar()
+    java_bin = jdk_home / "bin" / "java"
+    env_values = read_env_file()
+    env = os.environ.copy()
+    anthropic_key = env_values.get("ANTHROPIC_API_KEY")
+    if anthropic_key:
+        env["ANTHROPIC_API_KEY"] = anthropic_key
+    else:
+        _log("warning: ANTHROPIC_API_KEY not set in .env — AI tasks will fail")
+
+    if _read_pid("server"):
+        _log(f"server already running (pid {_read_pid('server')})")
+        return
+
+    # cwd=NORA_HOME so the server's default SQLite file (e.g. c123.db) lands
+    # there instead of wherever `nora` was invoked from.
+    _start_process("server", [str(java_bin), "-jar", str(jar_path), f"--server.port={port}"], cwd=NORA_HOME, env=env)
+    _log(f"waiting for the server to become healthy on port {port}...")
+    if _wait_for_server_health(port):
+        _log(f"server is up: http://localhost:{port}")
+    else:
+        _log(f"server did not become healthy — check .nora/logs/server.log (last lines below)")
+        _log("---")
+        subprocess.run(["tail", "-20", str(_log_file("server"))])
+
+
+# ── worker ────────────────────────────────────────────────────────────────
+
+
+def worker_start(port: int) -> None:
+    env_values = read_env_file()
+    env = os.environ.copy()
+    env.setdefault("CONDUCTOR_SERVER_URL", f"http://localhost:{port}/api")
+    for key, value in env_values.items():
+        env.setdefault(key, value)
+    _start_process("worker", ["uv", "run", "python", "-m", "workflows.worker"], cwd=REPO_ROOT / "python", env=env)
+
+
+# ── ui ────────────────────────────────────────────────────────────────────
+
+
+def _ui_dir() -> Path:
+    return REPO_ROOT / "ui"
+
+
+def _ui_ready() -> bool:
+    return (_ui_dir() / "package.json").exists()
+
+
+def ui_install() -> None:
+    if not _ui_ready():
+        _log("ui/package.json not found — skipping npm install")
+        return
+    subprocess.run(["npm", "install"], cwd=_ui_dir(), check=True)
+
+
+def ui_start() -> None:
+    if not _ui_ready():
+        _log("ui/package.json not found — nothing to start")
+        return
+    _start_process("ui", ["npm", "run", "dev"], cwd=_ui_dir())
+
+
+def ui_build() -> None:
+    if not _ui_ready():
+        _log("ui/package.json not found — nothing to build")
+        return
+    subprocess.run(["npm", "run", "build"], cwd=_ui_dir(), check=True)
+
+
+def ui_stop() -> None:
+    _stop_process("ui")
+
+
+# ── setup ─────────────────────────────────────────────────────────────────
+
+
+def setup() -> None:
+    _ensure_dirs()
+    ensure_jdk()
+    ensure_conductor_jar()
+    _log("installing python dependencies (uv sync)")
+    subprocess.run(["uv", "sync"], cwd=REPO_ROOT / "python", check=True)
+    ui_install()
+    _log("setup complete — try `./nora start`")
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────
+
+
+def _dispatch(actions: dict) -> None:
+    def run(action: str):
+        if action not in actions:
+            raise SystemExit(f"nora: unsupported action {action!r}")
+        actions[action]()
+
+    return run
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="nora", description="Local dev process manager for pgrn-lead-optimization")
+    parser.add_argument(
+        "--port", type=int, default=int(os.environ.get("CONDUCTOR_SERVER_PORT", DEFAULT_SERVER_PORT)), help="Conductor server port"
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser("setup", help="download JDK 21 + Conductor jar, install python/ui deps")
+
+    server_parser = sub.add_parser("server", help="manage the Conductor OSS server")
+    server_parser.add_argument("action", choices=["start", "stop", "restart", "status", "logs"])
+
+    worker_parser = sub.add_parser("worker", help="manage the python agent worker")
+    worker_parser.add_argument("action", choices=["start", "stop", "restart", "status", "logs"])
+
+    ui_parser = sub.add_parser("ui", help="manage the UI dev server")
+    ui_parser.add_argument("action", choices=["start", "stop", "restart", "build", "status", "logs"])
+
+    sub.add_parser("start", help="start server, worker, and ui")
+    sub.add_parser("stop", help="stop server, worker, and ui")
+    sub.add_parser("status", help="show status of server, worker, and ui")
+
+    logs_parser = sub.add_parser("logs", help="tail logs for one component")
+    logs_parser.add_argument("component", choices=COMPONENTS)
+
+    return parser
+
+
+def main() -> None:
+    args = build_parser().parse_args()
+
+    if args.command == "setup":
+        setup()
+    elif args.command == "server":
+        _dispatch(
+            {
+                "start": lambda: server_start(args.port),
+                "stop": lambda: _stop_process("server"),
+                "restart": lambda: (_stop_process("server"), server_start(args.port)),
+                "status": lambda: _status("server"),
+                "logs": lambda: _tail_logs("server"),
+            }
+        )(args.action)
+    elif args.command == "worker":
+        _dispatch(
+            {
+                "start": lambda: worker_start(args.port),
+                "stop": lambda: _stop_process("worker"),
+                "restart": lambda: (_stop_process("worker"), worker_start(args.port)),
+                "status": lambda: _status("worker"),
+                "logs": lambda: _tail_logs("worker"),
+            }
+        )(args.action)
+    elif args.command == "ui":
+        _dispatch(
+            {
+                "start": ui_start,
+                "stop": ui_stop,
+                "restart": lambda: (ui_stop(), ui_start()),
+                "build": ui_build,
+                "status": lambda: _status("ui"),
+                "logs": lambda: _tail_logs("ui"),
+            }
+        )(args.action)
+    elif args.command == "start":
+        server_start(args.port)
+        worker_start(args.port)
+        ui_start()
+    elif args.command == "stop":
+        ui_stop()
+        _stop_process("worker")
+        _stop_process("server")
+    elif args.command == "status":
+        for component in COMPONENTS:
+            _status(component)
+    elif args.command == "logs":
+        _tail_logs(args.component)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(130)

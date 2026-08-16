@@ -100,11 +100,19 @@ underlying flow.
 - [x] Ran the full tool chain (fetch → interface → ligands → library →
   dock → triage → ADMET → rank) end-to-end in-process against `6X48` with a
   4-compound smoke library — every stage produced real, sane output
-- [ ] Stand up a reachable Conductor server + LLM provider credential
-- [ ] Run `literature_agent` (Paperclip MCP) live for the first time — first
-  real runtime validation of the MCP wiring
-- [ ] Run the full `pipeline` (Agent/AgentRuntime, not just the plain tool
-  chain) end-to-end once a Conductor server + LLM credential are available
+- [x] Stand up a reachable Conductor server — done via `./nora server start`
+  (see [`nora-tool-spec.md`](nora-tool-spec.md)); no LLM credential set yet
+  (`ANTHROPIC_API_KEY` still blank in `.env`)
+- [x] `python/workflows/worker.py` (`AgentRuntime().serve(pipeline)`) live
+  against that server — all 11 tools across all 8 agents registered and
+  polled correctly, first real runtime validation of the Conductor wiring
+  (not just in-process Python calls)
+- [ ] Run `literature_agent` (Paperclip MCP) live for the first time —
+  blocked on `ANTHROPIC_API_KEY`; worker registration alone doesn't exercise
+  the LLM-driven agent loop
+- [ ] Run the full `pipeline` end-to-end via `runtime.run(...)` (an actual
+  agent conversation, not just worker registration) once
+  `ANTHROPIC_API_KEY` is set
 
 ## Deferred
 

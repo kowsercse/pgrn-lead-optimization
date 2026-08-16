@@ -8,7 +8,7 @@ Project direction is **not settled yet** — ask before assuming a target, modal
 
 - [`python/`](python/) — Python code (`pyproject.toml`, `uv.lock`, `main.py`)
 - [`docs/`](docs/) — project + tool documentation
-- [`ui/`](ui/) — empty, reserved for a future UI
+- [`ui/`](ui/) — React + Vite dashboard for the screening pipeline
 - [`spec/`](spec/) — spec docs for Claude
 
 ## Docs
@@ -19,6 +19,7 @@ Project direction is **not settled yet** — ask before assuming a target, modal
 - [`spec/therapeutic-hypothesis.md`](spec/therapeutic-hypothesis.md) — PGRN-Sortilin screening flow
 - [`spec/conductor-workflow-spec.md`](spec/conductor-workflow-spec.md) — Conductor agent pipeline spec
 - [`spec/implementation-plan.md`](spec/implementation-plan.md) — multi-stage tool implementation plan + status
+- [`spec/nora-tool-spec.md`](spec/nora-tool-spec.md) — `nora` local dev process manager (Conductor server, worker, UI)
 
 ## Requirements
 
@@ -27,19 +28,25 @@ Project direction is **not settled yet** — ask before assuming a target, modal
 ## Setup
 
 ```bash
-cd python
-uv sync
+./nora setup   # downloads Temurin JDK 21 + Conductor server jar, uv sync, npm install
+./nora start   # starts the Conductor server, python worker, and UI dev server
 ```
+
+See [`spec/nora-tool-spec.md`](spec/nora-tool-spec.md) for the full command
+surface (`./nora {server,worker,ui} {start,stop,restart,status,logs}`).
+Requires `ANTHROPIC_API_KEY` set in `.env` for LLM-driven agent runs.
 
 ## Repo state
 
-`python/main.py` is still an unmodified PyCharm stub. `ui/` is empty.
-Real work lives in `python/workflows/` — a Conductor agent pipeline
-(`pgrn_sortilin_agents.py`) for the PGRN-Sortilin screening hypothesis, with
-all tool bodies implemented in `python/workflows/tools/` and runtime
-parameters config-driven via `python/config.yaml` (see
-`spec/implementation-plan.md` for per-tool status/caveats). Not yet run
-end-to-end against a live Conductor server/LLM credential.
+`python/main.py` is still an unmodified PyCharm stub. Real work lives in
+`python/workflows/` — a Conductor agent pipeline (`pgrn_sortilin_agents.py`)
+for the PGRN-Sortilin screening hypothesis, with all tool bodies implemented
+in `python/workflows/tools/` and runtime parameters config-driven via
+`python/config.yaml` (see `spec/implementation-plan.md` for per-tool
+status/caveats). The worker (`python/workflows/worker.py`) has been run live
+against a local Conductor server (via `nora`) and successfully registered
+all tools; no LLM-driven agent run has happened yet (needs
+`ANTHROPIC_API_KEY`).
 
 ## Documentation style
 
