@@ -75,6 +75,16 @@ CREATE TABLE IF NOT EXISTS join_result (
     grade            TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS check_result (
+    check_id    TEXT PRIMARY KEY,
+    run_id      TEXT NOT NULL REFERENCES run(run_id),
+    kind        TEXT NOT NULL,
+    value       REAL NOT NULL,
+    threshold   REAL NOT NULL,
+    passed      INTEGER NOT NULL,
+    computed_at TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS record_by_run ON record(run_id, grade);
 CREATE INDEX IF NOT EXISTS join_by_run ON join_result(run_id);
 CREATE INDEX IF NOT EXISTS gap_by_run ON gap(run_id);
