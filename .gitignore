@@ -2,3 +2,7 @@
 .venv
 *.egg-info/
 __pycache__/
+
+# PowerPoint owner/lock files, created when deck.pptx is open
+~$*
+.DS_Store
