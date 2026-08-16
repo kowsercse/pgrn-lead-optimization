@@ -406,6 +406,16 @@ body {
   border-color: transparent;
 }
 
+.message-error {
+  color: #a13f2e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .message-error {
+    color: #e08972;
+  }
+}
+
 /* ---------- results table ---------- */
 
 .results-table {

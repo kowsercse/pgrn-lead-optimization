@@ -21,6 +21,7 @@ Project direction is **not settled yet** — ask before assuming a target, modal
 - [`spec/conductor-workflow-spec.md`](spec/conductor-workflow-spec.md) — Conductor agent pipeline spec
 - [`spec/implementation-plan.md`](spec/implementation-plan.md) — multi-stage tool implementation plan + status
 - [`spec/nora-tool-spec.md`](spec/nora-tool-spec.md) — `nora` local dev process manager (Conductor server, worker, UI)
+- [`spec/ui-conductor-client-spec.md`](spec/ui-conductor-client-spec.md) — UI's browser-side Conductor agent API client (no backend)
 
 ## Requirements
 

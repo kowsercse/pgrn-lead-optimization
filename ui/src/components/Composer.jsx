@@ -1,11 +1,14 @@
 import { useState } from "react";
 
-export default function Composer() {
+export default function Composer({ onSend, disabled }) {
   const [message, setMessage] = useState("");
   const [extendedThinking, setExtendedThinking] = useState(true);
 
   function handleSubmit(event) {
     event.preventDefault();
+    const trimmed = message.trim();
+    if (!trimmed || disabled) return;
+    onSend(trimmed);
     setMessage("");
   }
 
@@ -15,6 +18,7 @@ export default function Composer() {
         placeholder="Message Acme AI…"
         rows={2}
         value={message}
+        disabled={disabled}
         onChange={(event) => setMessage(event.target.value)}
       />
       <div className="composer-actions">
@@ -26,8 +30,8 @@ export default function Composer() {
           />
           Extended thinking
         </label>
-        <button type="submit" className="btn btn-primary">
-          Send
+        <button type="submit" className="btn btn-primary" disabled={disabled}>
+          {disabled ? "Running…" : "Send"}
         </button>
       </div>
     </form>

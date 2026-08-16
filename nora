@@ -270,10 +270,13 @@ def server_start(port: int) -> None:
     java_bin = jdk_home / "bin" / "java"
     env_values = read_env_file()
     env = os.environ.copy()
-    anthropic_key = env_values.get("ANTHROPIC_API_KEY")
-    if anthropic_key:
-        env["ANTHROPIC_API_KEY"] = anthropic_key
-    else:
+    # Pass the whole .env through, not just ANTHROPIC_API_KEY: Conductor's
+    # "env-backed secrets" (used for ${VAR} substitution in things like an
+    # mcp_tool()'s headers, e.g. Paperclip's PAPERCLIP_API_KEY) resolve from
+    # the server process's own environment — there's no REST API to set them
+    # (PUT /secrets/{key} 501s with "env-backed secrets are read-only").
+    env.update(env_values)
+    if not env_values.get("ANTHROPIC_API_KEY"):
         _log("warning: ANTHROPIC_API_KEY not set in .env — AI tasks will fail")
 
     if _read_pid("server"):
