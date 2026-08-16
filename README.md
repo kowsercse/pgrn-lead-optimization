@@ -26,38 +26,18 @@ Sortilin (SORT1) is the worked case.
 
 ## Status — 15 Aug, 20:50
 
-152 tests green. `pytest` from a fresh clone should pass with no network.
+182 tests green. `pytest` from a fresh clone should pass with no network.
 
 | Stage | State | Notes |
 |---|---|---|
 | 0 Foundation | **done** | store, schema, grade rules as CHECK constraints |
-| 1 Retrieval | **in progress** | dispatch + required-scout rule done; both required scouts (`structures`, `bioactivity`) done |
+| 1 Retrieval | **done** | dispatch, required-scout rule, all five scouts |
 | 2 Verification | **done** | resolver gate: budget, cache, frequency ordering, demotion |
 | 3 Joins | **done** | InChIKey disjointness, directional scaffold match, count reconciliation |
 | 4 Answers and render | **done** | five answers with grade floor; self-contained HTML |
 | 5 Feasibility and loop | **done** | five branches, all reachable; D1 regression pinned |
-| 6 Audit and cold run | not started | agnosticism grep already passes |
+| 6 Audit and cold run | **done** | `dossier run --target <SYMBOL>`; cold run verified |
 
-### Free to pick up
-
-The four remaining scouts are independent of each other — take one, branch from `main`,
-open a PR. Each follows the pattern in `dossier/scouts/structures.py`: **pure parsing
-tested offline, network only in the `fetch_*` adapters.**
-
-| Scout | Source | Named check it must implement |
-|---|---|---|
-| `patents` | PubChem AIDs, patent depositions | query PubChem *and* ChEMBL; patent sets are often in one and not the other |
-| `assays` | assay descriptions | flag qHTS; count records carrying a real IC50 |
-| `literature` | Paperclip, PubMed MCP | search pathway and phenotypic aliases, not only the direct target |
-
-Two rules that are not negotiable, both enforced by tests or the Stage 6 audit:
-
-1. **No target-specific identifier anywhere under `dossier/`.** No PDB ID, ChEMBL
-   accession, PubChem AID, compound name or target symbol. They are scout *outputs*.
-   Expected values live in `tests/fixtures/`. Check with:
-   `grep -rE '6X48|5MRI|UP4|CHEMBL3091|CHEMBL4680051|2202264|norleucine|SORT1|CTSL' dossier/`
-2. **Write the test first.** Every module here was built that way, and it caught a real
-   bug — see the `feat(dispatch)` commit message.
 
 ## Docs
 
