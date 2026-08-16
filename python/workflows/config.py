@@ -72,6 +72,7 @@ class AdmetConfig(BaseModel):
 class BenchlingConfig(BaseModel):
     enabled: bool = False
     base_url: str = "https://hackathon.bnchdev.org"
+    entity_schema_id: str | None = None
     results_folder_id: str | None = None
 
 

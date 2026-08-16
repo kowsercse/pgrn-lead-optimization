@@ -1,10 +1,13 @@
 # Implementation plan
 
-Multi-stage plan for turning the barebone Conductor pipeline
+Multi-stage plan for turning the Conductor pipeline
 (`python/workflows/pgrn_sortilin_agents.py`) into a working PGRN-Sortilin
-screening tool. See [`conductor-workflow-spec.md`](conductor-workflow-spec.md)
-for agent topology, [`therapeutic-hypothesis.md`](therapeutic-hypothesis.md)
-for the underlying flow.
+screening tool. All 10 tool bodies are now implemented (see Status below for
+per-tool caveats); what's left is runtime validation against a live
+Conductor server + LLM credential. See
+[`conductor-workflow-spec.md`](conductor-workflow-spec.md) for agent
+topology, [`therapeutic-hypothesis.md`](therapeutic-hypothesis.md) for the
+underlying flow.
 
 ## Status
 
@@ -40,9 +43,16 @@ for the underlying flow.
   clustering on Morgan fingerprints, live-verified
 - Done: `predict_admet` — RDKit Lipinski Ro5 + QED proxy (no proto-tools
   ADMET tool exists), live-verified; pass/fail thresholds config-driven
+- Done: `rank_and_handoff` — weighted composite ranking (docking affinity +
+  QED + scaffold diversity), live-verified end-to-end; Benchling handoff
+  uses the documented Apps + API OAuth2 client-credentials flow (real
+  request shape, untested — no tenant credentials/schema IDs available here,
+  gated off by default via `prioritization.benchling.enabled`)
 - Done: runtime parameters (target IDs, thresholds, engine choices) moved to
   `python/config.yaml`, loaded via `python/workflows/config.py`
-- Stub: `rank_and_handoff` (1 remaining)
+- All 10 pipeline tools now have real implementations (see per-tool caveats
+  above: `mkdssp` binary missing locally, Boltz2/Chai1 need GPU/Modal
+  compute, PubChem compound-numbering ambiguity, Benchling untested)
 
 ## Stage 1 — Structural foundation
 
@@ -82,12 +92,19 @@ for the underlying flow.
 
 ## Stage 5 — Prioritization + runtime validation
 
-- [ ] `rank_and_handoff` — rank shortlist (score + ADMET + diversity);
-  Benchling handoff needs API/MCP wiring (not yet done)
+- [x] `rank_and_handoff` — weighted composite rank (`prioritization.weights`,
+  `prioritization.top_n`); Benchling handoff via Apps + API OAuth2
+  client-credentials (`prioritization.benchling.*`, `BENCHLING_CLIENT_ID`/
+  `BENCHLING_CLIENT_SECRET`), gated off (`enabled: false`) until a tenant
+  schema/folder ID and credentials are available
+- [x] Ran the full tool chain (fetch → interface → ligands → library →
+  dock → triage → ADMET → rank) end-to-end in-process against `6X48` with a
+  4-compound smoke library — every stage produced real, sane output
 - [ ] Stand up a reachable Conductor server + LLM provider credential
 - [ ] Run `literature_agent` (Paperclip MCP) live for the first time — first
   real runtime validation of the MCP wiring
-- [ ] Run the full `pipeline` end-to-end once all tools are implemented
+- [ ] Run the full `pipeline` (Agent/AgentRuntime, not just the plain tool
+  chain) end-to-end once a Conductor server + LLM credential are available
 
 ## Deferred
 

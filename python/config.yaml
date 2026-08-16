@@ -66,4 +66,5 @@ prioritization:
   benchling:
     enabled: false # flip true once BENCHLING_CLIENT_ID/BENCHLING_CLIENT_SECRET + tenant schema IDs are confirmed
     base_url: https://hackathon.bnchdev.org
-    results_folder_id: null
+    entity_schema_id: null # Benchling custom-entity schema ID for shortlist compounds
+    results_folder_id: null # Benchling folder ID to file new entities under

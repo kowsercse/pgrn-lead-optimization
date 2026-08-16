@@ -27,6 +27,7 @@ from workflows.config import load_config
 from workflows.tools.admet import predict_admet
 from workflows.tools.interface import map_interface_pocket
 from workflows.tools.ligands import search_known_ligands
+from workflows.tools.prioritization import rank_and_handoff
 from workflows.tools.screening import assemble_screening_library, dock_library, validate_positive_controls
 from workflows.tools.structure import fetch_pdb_structure, predict_complex_structure, score_structure_quality
 from workflows.tools.triage import filter_hits
@@ -157,12 +158,8 @@ admet_agent = Agent(
 
 
 # ── 8. Prioritization ─────────────────────────────────────────────────
-
-@tool
-def rank_and_handoff(compounds: dict) -> dict:
-    """Rank the final shortlist and hand off to experimental validation."""
-    raise NotImplementedError("TODO: rank + push to Benchling")
-
+# Tool implemented in workflows/tools/prioritization.py (config-driven:
+# `prioritization.weights`, `prioritization.top_n`, `prioritization.benchling`).
 
 prioritization_agent = Agent(
     name="prioritization_agent",
@@ -173,8 +170,8 @@ prioritization_agent = Agent(
         "shortlist. Use rank_and_handoff to record the shortlist for "
         "experimental validation (tracked in Benchling).\n\n"
         "Note: the experimental hit/no-hit feedback loop back into screening "
-        "(see spec/therapeutic-hypothesis.md) is out of scope for this "
-        "barebone pipeline."
+        "(see spec/therapeutic-hypothesis.md) is explicitly out of scope for "
+        "this pipeline."
     ),
 )
 
