@@ -188,6 +188,10 @@ pipeline = (
     >> admet_agent
     >> prioritization_agent
 )
+# `>>` auto-names the combined agent by concatenating every child agent's
+# name (e.g. "literature_agent_structure_agent_..._prioritization_agent") —
+# this is what Conductor uses as the workflow name, so give it a real one.
+pipeline.name = "pgrn_sortilin_screening_pipeline"
 
 
 if __name__ == "__main__":
