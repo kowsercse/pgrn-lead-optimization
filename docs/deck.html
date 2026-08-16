@@ -1,0 +1,593 @@
+<title>Target Dossier in Six Steps</title>
+<style>
+  :root{
+    --ground:#EDF1F2; --surface:#FFFFFF; --surface-2:#E8EDEE;
+    --ink:#12232A; --ink-2:#33474F; --muted:#5E7178; --faint:#8A9DA3;
+    --rule:#D3DCDE; --rule-2:#BCC9CC;
+    --key:#B87333; --lock:#0F6D7A; --bad:#A8422F; --good:#2C6E52;
+    --shadow:0 1px 2px rgba(18,35,42,.07), 0 10px 34px rgba(18,35,42,.09);
+    --display:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0A1214; --surface:#141F22; --surface-2:#1B282C;
+      --ink:#E8EFF0; --ink-2:#C2D2D6; --muted:#93A7AD; --faint:#6E8288;
+      --rule:#243437; --rule-2:#31464A;
+      --key:#D89A5C; --lock:#5BB8C4; --bad:#E08476; --good:#6FBF95;
+      --shadow:0 1px 2px rgba(0,0,0,.6), 0 10px 34px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0A1214; --surface:#141F22; --surface-2:#1B282C;
+    --ink:#E8EFF0; --ink-2:#C2D2D6; --muted:#93A7AD; --faint:#6E8288;
+    --rule:#243437; --rule-2:#31464A;
+    --key:#D89A5C; --lock:#5BB8C4; --bad:#E08476; --good:#6FBF95;
+    --shadow:0 1px 2px rgba(0,0,0,.6), 0 10px 34px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--ground);color:var(--ink);font-family:var(--display);
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+
+  #deck{height:100vh;display:grid;place-items:center;padding:2.4vh 2vw 5.6vh}
+  .slide{display:none;flex-direction:column;
+    width:min(100%, calc(88vh * 16 / 9));aspect-ratio:16/9;
+    background:var(--surface);border:1px solid var(--rule);border-radius:5px;
+    box-shadow:var(--shadow);padding:3.4% 4.2% 2.6%;
+    font-size:min(1.62vw, 2.86vh);line-height:1.5}
+  .slide.on{display:flex}
+
+  .eyebrow{display:flex;justify-content:space-between;align-items:baseline;
+    font-family:var(--mono);font-size:.62em;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--faint);margin:0 0 .85em}
+  .eyebrow .t{color:var(--key)}
+  .eyebrow .s{color:var(--lock)}
+  h1{font-weight:800;font-size:2.85em;line-height:1.02;letter-spacing:-.035em;
+    margin:0;text-wrap:balance}
+  h2{font-weight:750;font-size:1.55em;line-height:1.1;letter-spacing:-.024em;
+    margin:0 0 .5em;text-wrap:balance;max-width:30ch}
+  .sub{font-size:1.05em;color:var(--ink-2);margin:.8em 0 0;max-width:42ch}
+  p{margin:0 0 .5em;color:var(--ink-2);max-width:60ch}
+  .body{flex:1;min-height:0;display:flex;flex-direction:column;gap:.45em}
+  .land{border-top:1px solid var(--rule);margin-top:auto;padding-top:.55em;
+    font-size:.72em;color:var(--muted);max-width:86ch}
+  .land b{color:var(--ink);font-weight:650}
+
+  figure{margin:0;flex:1;min-height:0;display:flex}
+  figure svg{width:100%;height:100%;color:var(--ink)}
+
+  .rows{display:flex;flex-direction:column}
+  .row{display:grid;gap:1.1em;align-items:baseline;padding:.44em 0;
+    border-top:1px solid var(--rule);grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}
+  .row .k{font-weight:640;color:var(--ink)}
+  .row .v{color:var(--muted);font-size:.88em}
+  .row .v em{font-style:normal;color:var(--ink-2)}
+  .q{display:grid;grid-template-columns:1.6em minmax(0,1fr) minmax(0,1.15fr) minmax(0,.8fr);
+    gap:1em;align-items:baseline;padding:.44em 0;border-top:1px solid var(--rule)}
+  .q .n{font-family:var(--mono);font-size:.78em;color:var(--key)}
+  .q .k{font-weight:640;color:var(--ink)}
+  .q .v{color:var(--muted);font-size:.85em}
+  .q .f{color:var(--lock);font-size:.78em;font-family:var(--mono);letter-spacing:.02em}
+  .q.dim .k,.q.dim .v{color:var(--muted)}
+  .q.dim .f{color:var(--bad)}
+
+  .strip{display:flex;gap:1.8em;flex-wrap:wrap;font-size:.68em;color:var(--muted);
+    font-family:var(--mono);letter-spacing:.02em;margin-top:.3em;margin-bottom:.55em}
+  .strip span b{color:var(--ink-2);font-weight:600}
+  .chips{display:flex;gap:.6em}
+  .chip{border:1px solid var(--rule);border-radius:3px;padding:.5em .8em;
+    font-size:.78em;color:var(--ink-2);flex:1}
+  .chip b{display:block;font-family:var(--mono);font-size:.86em;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--lock);font-weight:600;margin-bottom:.2em}
+
+  #rail{position:fixed;left:0;right:0;bottom:0;height:5vh;display:flex;
+    align-items:center;gap:1.1vw;padding:0 2vw;font-family:var(--mono);
+    font-size:min(.72vw,1.32vh);letter-spacing:.1em;color:var(--faint);
+    background:var(--ground);border-top:1px solid var(--rule)}
+  #bar{flex:1;height:2px;background:var(--rule);position:relative}
+  #fill{position:absolute;inset:0 auto 0 0;background:var(--key);width:12.5%;
+    transition:width .18s ease}
+  #rail b{color:var(--ink-2);font-weight:600}
+  button{font:inherit;color:inherit;background:none;border:1px solid var(--rule);
+    border-radius:2px;padding:.28em .7em;cursor:pointer;letter-spacing:.1em}
+  button:hover{border-color:var(--rule-2);color:var(--ink)}
+  button:focus-visible{outline:2px solid var(--key);outline-offset:2px}
+
+  .notes{display:none}
+  #notes{position:fixed;left:0;right:0;bottom:5vh;max-height:34vh;overflow-y:auto;
+    padding:1.1em 2vw;background:var(--surface-2);border-top:2px solid var(--key);
+    font-size:min(.92vw,1.7vh);line-height:1.55;color:var(--ink-2);white-space:pre-wrap;
+    display:none}
+  #notes.on{display:block}
+  #notes b{display:block;font-family:var(--mono);font-size:.8em;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--key);margin-bottom:.5em}
+
+  @media (prefers-reduced-motion:reduce){#fill{transition:none}}
+  @media print{
+    body{overflow:visible;background:#fff}
+    #deck{display:block;height:auto;padding:0}
+    #rail{display:none}
+    .slide{display:flex!important;width:100%;aspect-ratio:16/9;
+      page-break-after:always;box-shadow:none;font-size:13pt}
+  }
+</style>
+
+<div id="deck">
+
+<!-- 1 ─ title ────────────────────────────────────────────────────── -->
+<section class="slide on">
+  <div class="eyebrow"><span>re:AGENT 2026 · Track A · co-scientist</span><span class="t">0:00 – 0:20</span></div>
+  <div class="body" style="justify-content:center">
+    <h1>Target dossier agent</h1>
+    <p class="sub">Name a protein. Six fixed steps later: whether a structure-based
+      medicinal chemistry campaign can start on it, which structure to design against,
+      and which molecules to learn from.</p>
+  </div>
+  <div class="land"><b>The rest of this talk is one diagram, walked top to bottom.</b>
+    Every slide after the next one is a close-up of one of its steps.</div>
+
+  <aside class="notes">Open with the input and the output, nothing else. "You give this a protein symbol. Four minutes later it tells you whether a structure-based medicinal chemistry campaign can start on that protein — and if it can, which structure to design against and which molecules to learn from."
+
+Do not explain the architecture yet. Twenty seconds, then move. If you are already running late, this is the slide to cut to ten.</aside>
+</section>
+
+<!-- 2 ─ the full diagram ─────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow"><span>the whole thing, in one picture</span><span class="t">0:20 – 1:05</span></div>
+  <div class="body" style="gap:.2em">
+  <figure>
+    <svg viewBox="0 0 1000 400" role="img" aria-label="A protein symbol fans out to five concurrent scouts bound to named databases. Their records pass a resolver that re-fetches every cited identifier, then a stage that decides what counts as the same thing, with receptor selection drawn separately as an inference. Five answers are committed to a first dossier, and only then are four feasibility checks computed, which select one of four branches and produce a second dossier.">
+      <defs>
+        <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9z" fill="currentColor"/></marker>
+        <marker id="d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9z" fill="var(--key)"/></marker>
+      </defs>
+      <g font-size="11" fill="currentColor" font-family="var(--display)">
+
+        <rect x="8" y="76" width="104" height="52" rx="4" fill="none" stroke="var(--lock)" stroke-width="1.6"/>
+        <text x="60" y="98" text-anchor="middle" font-size="11.5" fill="var(--lock)">protein symbol</text>
+        <text x="60" y="114" text-anchor="middle" font-size="9.5" fill="var(--lock)">the only input</text>
+
+        <text x="146" y="16" font-family="var(--mono)" font-size="9" letter-spacing="1.1" fill="var(--key)">1 · GATHER — 5 SCOUTS AT ONCE</text>
+        <g stroke="currentColor" stroke-width="1" fill="none">
+          <rect x="146" y="28" width="176" height="28" rx="3"/><rect x="146" y="62" width="176" height="28" rx="3"/>
+          <rect x="146" y="96" width="176" height="28" rx="3"/><rect x="146" y="130" width="176" height="28" rx="3"/>
+          <rect x="146" y="164" width="176" height="28" rx="3"/>
+        </g>
+        <g font-size="10.5">
+          <text x="158" y="46">structures</text><text x="312" y="46" text-anchor="end" font-family="var(--mono)" font-size="8.8" fill="var(--lock)">RCSB PDB</text>
+          <text x="158" y="80">bioactivity</text><text x="312" y="80" text-anchor="end" font-family="var(--mono)" font-size="8.8" fill="var(--lock)">ChEMBL</text>
+          <text x="158" y="114">patents</text><text x="312" y="114" text-anchor="end" font-family="var(--mono)" font-size="8.8" fill="var(--lock)">PubChem</text>
+          <text x="158" y="148">assays</text><text x="312" y="148" text-anchor="end" font-family="var(--mono)" font-size="8.8" fill="var(--lock)">ChEMBL</text>
+          <text x="158" y="182">literature</text><text x="312" y="182" text-anchor="end" font-family="var(--mono)" font-size="8.8" fill="var(--lock)">PubMed</text>
+        </g>
+        <text x="146" y="208" font-size="9.2" fill="var(--muted)">180 s each; the first two are required, and a scout that misses its deadline becomes a stated gap rather than a stall</text>
+
+        <g stroke="currentColor" stroke-width="1" fill="none" marker-end="url(#d1)">
+          <path d="M112,102 C128,102 128,42 142,42"/><path d="M112,102 C128,102 128,76 142,76"/>
+          <line x1="112" y1="102" x2="142" y2="110"/>
+          <path d="M112,102 C128,102 128,144 142,144"/><path d="M112,102 C128,102 128,178 142,178"/>
+        </g>
+
+        <text x="348" y="16" font-family="var(--mono)" font-size="9" letter-spacing="1.1" fill="var(--key)">2 · CHECK SOURCES</text>
+        <rect x="348" y="28" width="128" height="164" rx="4" fill="none" stroke="var(--lock)" stroke-width="1.5"/>
+        <text x="360" y="56" font-size="11">re-fetch every</text>
+        <text x="360" y="72" font-size="11">cited identifier,</text>
+        <text x="360" y="88" font-size="11">independently</text>
+        <text x="360" y="116" font-size="9.6" fill="var(--muted)">if it does not</text>
+        <text x="360" y="130" font-size="9.6" fill="var(--muted)">resolve, the claim</text>
+        <text x="360" y="144" font-size="9.6" fill="var(--muted)">is demoted and</text>
+        <text x="360" y="158" font-size="9.6" fill="var(--muted)">flagged</text>
+        <g stroke="currentColor" stroke-width="1" fill="none" marker-end="url(#d1)">
+          <path d="M322,42 C334,42 334,105 344,108"/><path d="M322,76 C334,76 334,107 344,109"/>
+          <line x1="322" y1="110" x2="344" y2="110"/>
+          <path d="M322,144 C334,144 334,115 344,112"/><path d="M322,178 C334,178 334,117 344,113"/>
+        </g>
+
+        <text x="502" y="16" font-family="var(--mono)" font-size="9" letter-spacing="1.1" fill="var(--key)">3 · SAME-THING DECISIONS</text>
+        <rect x="502" y="28" width="168" height="104" rx="4" fill="none" stroke="var(--lock)" stroke-width="1.5"/>
+        <g font-size="10.4" fill="var(--lock)">
+          <text x="514" y="50">same molecule, 2 sources</text>
+          <text x="514" y="70">same protein, several names</text>
+          <text x="514" y="90">same evidence, 2 counts</text>
+        </g>
+        <text x="514" y="112" font-size="9.2" fill="var(--muted)">so each fact is counted</text>
+        <text x="514" y="124" font-size="9.2" fill="var(--muted)">exactly once</text>
+        <rect x="502" y="142" width="168" height="48" rx="4" fill="none" stroke="var(--key)" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <text x="514" y="158" font-size="10.4" fill="var(--key)">which structure to use?</text>
+        <text x="514" y="171" font-size="9" fill="var(--muted)">does the bound ligand contain</text>
+        <text x="514" y="183" font-size="9" fill="var(--muted)">the series core?</text>
+        <line x1="476" y1="86" x2="498" y2="80" stroke="currentColor" stroke-width="1" fill="none" marker-end="url(#d1)"/>
+        <line x1="476" y1="140" x2="498" y2="162" stroke="currentColor" stroke-width="1" fill="none" marker-end="url(#d1)"/>
+
+        <text x="700" y="16" font-family="var(--mono)" font-size="9" letter-spacing="1.1" fill="var(--key)">4 · COMMIT</text>
+        <rect x="700" y="28" width="292" height="104" rx="4" fill="none" stroke="var(--lock)" stroke-width="1.8"/>
+        <text x="712" y="52" font-size="12" fill="var(--lock)">DOSSIER v1 — five answers, each graded</text>
+        <text x="712" y="72" font-size="9.6" fill="var(--muted)">which structure · how much chemical matter</text>
+        <text x="712" y="86" font-size="9.6" fill="var(--muted)">is there a series to optimise · is the field still active</text>
+        <text x="712" y="100" font-size="9.6" fill="var(--muted)">what could not be established</text>
+        <text x="712" y="122" font-size="10" fill="var(--key)">written before a single check exists</text>
+        <line x1="670" y1="80" x2="696" y2="72" stroke="currentColor" stroke-width="1" fill="none" marker-end="url(#d1)"/>
+        <line x1="670" y1="164" x2="696" y2="112" stroke="var(--key)" stroke-width="1"
+              stroke-dasharray="4 3" fill="none" marker-end="url(#d2)"/>
+
+        <path d="M846,132 L846,236 L60,236 L60,266" stroke="var(--key)" stroke-width="1.4"
+              fill="none" marker-end="url(#d2)" opacity=".9"/>
+        <text x="440" y="230" font-size="9.4" fill="var(--key)">the commitment now goes to be tested</text>
+
+        <text x="170" y="258" font-family="var(--mono)" font-size="9" letter-spacing="1.1" fill="var(--key)">5 · MEASURE — FOUR DETERMINISTIC CHECKS, RDKit ONLY</text>
+        <g stroke="currentColor" stroke-width="1" fill="none">
+          <rect x="8" y="270" width="150" height="46" rx="3"/><rect x="166" y="270" width="150" height="46" rx="3"/>
+          <rect x="324" y="270" width="150" height="46" rx="3"/><rect x="482" y="270" width="150" height="46" rx="3"/>
+        </g>
+        <g font-size="10.4">
+          <text x="20" y="290">series depth</text><text x="20" y="306" font-size="9" fill="var(--muted)">≥20 analogs, ≥15 on one core</text>
+          <text x="178" y="290">activity range</text><text x="178" y="306" font-size="9" fill="var(--muted)">≥2 log units, or nothing to rank</text>
+          <text x="336" y="290">bound ligand</text><text x="336" y="306" font-size="9" fill="var(--muted)">drug-sized, not a fragment</text>
+          <text x="494" y="290">resolution</text><text x="494" y="306" font-size="9" fill="var(--muted)">≤2.5 Å design, ≤3.5 Å triage</text>
+        </g>
+
+        <text x="666" y="258" font-family="var(--mono)" font-size="9" letter-spacing="1.1" fill="var(--key)">6 · BRANCH</text>
+        <rect x="666" y="270" width="326" height="46" rx="3" fill="none" stroke="var(--key)" stroke-width="1.5"/>
+        <text x="678" y="290" font-size="10.4" fill="var(--key)">proceed · triage only · not ready · no structure</text>
+        <text x="678" y="306" font-size="9" fill="var(--muted)">whichever the four results select — DOSSIER v2 may disagree with v1</text>
+        <line x1="632" y1="293" x2="662" y2="293" stroke="var(--key)" stroke-width="1.3" fill="none" marker-end="url(#d2)"/>
+
+        <rect x="8" y="342" width="984" height="46" rx="3" fill="none" stroke="currentColor"
+              stroke-width="1" stroke-dasharray="4 3" opacity=".55"/>
+        <text x="22" y="362" font-size="9.6" fill="var(--muted)">Underneath all six: every fact lands in one SQLite file the moment it is found, with the exact query, an output hash and two timestamps.</text>
+        <text x="22" y="377" font-size="9.6" fill="var(--muted)">Any step re-runs alone against a previous run's data, and any sentence in the report traces back to what produced it.</text>
+      </g>
+    </svg>
+  </figure>
+  </div>
+  <div class="land"><b>The order carries the argument.</b> Steps 1–4 produce a committed
+    answer. Steps 5–6 measure it afterwards, and are allowed to overturn it.</div>
+
+  <aside class="notes">This is the whole talk on one slide. Trace it with a finger: left to right along the top, then down and back along the bottom.
+
+Say three things and no more. The five searches run at the same time, not in a planned sequence. The report is written at step 4, before any check exists. The checks at step 5 are allowed to overturn it.
+
+Everything after this is a close-up of one box. Do not read the boxes aloud — the room can read faster than you can speak.</aside>
+</section>
+
+<!-- 3 ─ steps 1 and 2 ────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow"><span class="s">steps 1 – 2</span><span>gather, then check every source is real</span><span class="t">1:05 – 1:45</span></div>
+  <h2>Five databases at once, then every citation re-opened</h2>
+  <div class="body">
+    <div class="rows">
+      <div class="row">
+        <span class="k">the same five scouts run for every target</span>
+        <span class="v">no planner decides what to look up. A published agentic
+          orchestrator was measured calling its tools in the same order every time and
+          was replaced with a fixed script; <em>we started there</em></span>
+      </div>
+      <div class="row">
+        <span class="k">structures and bioactivity are required</span>
+        <span class="v">if either comes back empty the verdict is <em>insufficient
+          retrieval</em> — no recommendation is computed over absent data</span>
+      </div>
+      <div class="row">
+        <span class="k">the other three are contributing</span>
+        <span class="v">patents, assay descriptions and literature each deepen the
+          picture; a miss is <em>a stated gap, never a silent one</em></span>
+      </div>
+      <div class="row">
+        <span class="k">then a separate pass re-fetches every cited identifier</span>
+        <span class="v">independently of the scout that reported it. If it does not
+          resolve, the claim is <em>demoted automatically and flagged</em></span>
+      </div>
+    </div>
+    <div class="strip">
+      <span><b>why the second pass exists</b> — in a published ablation, 44.5% of the references an ungrounded model cited did not exist</span>
+    </div>
+  </div>
+  <div class="land"><b>Demo this one live.</b> A fabricated accession goes in as
+    <span style="font-family:var(--mono)">verified</span> and comes out as
+    <span style="font-family:var(--mono)">inferred</span>, on stage, in one gesture.</div>
+
+  <aside class="notes">Two points.
+
+First, the pipeline is fixed: the same five scouts for every target. That is a deliberate choice, not laziness. A published agentic orchestrator was measured calling its tools in the same order every time, so its own authors replaced it with a straight script. We started there and spent the budget on verification instead.
+
+Second, and this is the one to land: a separate pass re-opens every citation, independently of the scout that reported it. The 44.5% figure is why it exists.
+
+If you are demoing live, do it here — a fabricated accession goes in as verified and comes out as inferred.</aside>
+</section>
+
+<!-- 4 ─ step 3a ──────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow"><span class="s">step 3</span><span>decide what counts as the same thing</span><span class="t">1:45 – 2:20</span></div>
+  <h2>Three ways the numbers come out wrong</h2>
+  <div class="body">
+    <div class="rows" style="flex:1">
+      <div class="row">
+        <span class="k">a compound in ChEMBL, and the same structure deposited from a patent</span>
+        <span class="v"><em>one molecule.</em> Counted twice, the target looks richer in chemical matter than it is</span>
+      </div>
+      <div class="row">
+        <span class="k"><span style="font-family:var(--mono);font-size:.92em">SORT1</span>, and sortilin, and neurotensin receptor 3</span>
+        <span class="v"><em>one protein</em> — UniProt lists all three. The gene symbol
+          returns <em>388</em> PubMed records; its own protein name returns <em>1,056</em>.
+          Work filed under the pathway it serves mentions neither</span>
+      </div>
+      <div class="row">
+        <span class="k">400 activity records, and 138 distinct compounds</span>
+        <span class="v"><em>one set of evidence, two counts.</em> One compound assayed five times reads as five compounds</span>
+      </div>
+    </div>
+    <figure style="flex:0 0 auto;height:22%;margin-bottom:.7em">
+      <svg viewBox="0 0 1000 96" preserveAspectRatio="xMidYMid meet" role="img" aria-label="On a live query the target returned 400 activity records, resolving to 138 distinct compounds — a 2.9-fold difference.">
+        <g font-family="var(--display)" fill="currentColor">
+          <text x="0" y="24" font-size="11.5" fill="var(--muted)">activity records</text>
+          <rect x="180" y="10" width="700" height="18" rx="3" fill="var(--bad)" opacity=".4"/>
+          <text x="892" y="25" font-family="var(--mono)" font-size="14" fill="var(--bad)">400</text>
+          <text x="0" y="60" font-size="11.5" fill="var(--muted)">distinct compounds</text>
+          <rect x="180" y="46" width="241" height="18" rx="3" fill="var(--good)" opacity=".6"/>
+          <text x="433" y="61" font-family="var(--mono)" font-size="14" fill="var(--good)">138</text>
+          <text x="180" y="88" font-size="11" fill="var(--muted)">2.9× on the live run. Quote the record count and this reads as a different project.</text>
+        </g>
+      </svg>
+    </figure>
+  </div>
+  <div class="land"><b>Nothing here looks for a difference between sources.</b> Every one
+    contributes; the step exists so that no fact is counted twice or missed.</div>
+
+  <aside class="notes">Three counting failures. Lead with the numbers, not the concept.
+
+400 activity records is 138 molecules. That is the same compound measured in several assays, and quoting the record count makes this look like a different project.
+
+The alias row: SORT1 returns 388 PubMed records, sortilin returns 1,056, and it is the same protein — UniProt lists sortilin, neurotensin receptor 3 and gp95 under the one entry.
+
+Expect a challenge on whether that count comparison is fair. The honest answer: PubMed expands search terms, so treat it as indicative of the size of the gap rather than a controlled measurement.</aside>
+</section>
+
+<!-- 5 ─ step 3b ──────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow"><span class="s">step 3, right-hand box</span><span>which structure to design against</span><span class="t">2:20 – 3:00</span></div>
+  <h2>The blurrier structure is the right one</h2>
+  <div class="body">
+  <figure>
+    <svg viewBox="0 0 1000 300" role="img" aria-label="A patent series of 106 compounds on one core is compared against two crystal structures. 5MRI at 2.00 angstroms is sharper but its bound ligand is unrelated to the series. 6X48 at 2.9 angstroms carries ligand UP4, which shares the series core. The agent designs against 6X48 and keeps 5MRI as a fallback.">
+      <defs>
+        <marker id="c1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9z" fill="currentColor"/></marker>
+      </defs>
+      <g font-family="var(--display)" font-size="12" fill="currentColor">
+        <rect x="300" y="4" width="400" height="42" rx="4" fill="none" stroke="var(--lock)" stroke-width="1.6"/>
+        <text x="500" y="24" text-anchor="middle" font-size="12.5" fill="var(--lock)">the series we would be optimising</text>
+        <text x="500" y="40" text-anchor="middle" font-size="10.5" fill="var(--muted)">106 compounds, one shared core, 77 of them sub-micromolar</text>
+
+        <g stroke="currentColor" stroke-width="1.1" fill="none" marker-end="url(#c1)" opacity=".7">
+          <path d="M340,46 C300,46 262,58 240,82"/>
+          <path d="M660,46 C700,46 738,58 760,82"/>
+        </g>
+
+        <rect x="40" y="88" width="392" height="116" rx="4" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+        <text x="60" y="117" font-size="18" font-weight="700">5MRI</text>
+        <text x="126" y="117" font-size="12.5" fill="var(--muted)">2.00 Å — the sharper picture</text>
+        <text x="60" y="146" font-size="11.5" fill="var(--muted)">bound ligand is unrelated to our series</text>
+        <text x="60" y="171" font-size="12" fill="var(--bad)">✗ the pocket is shaped around something else</text>
+        <text x="60" y="190" font-size="11" fill="var(--muted)">side chains sit where that ligand put them, not ours</text>
+
+        <rect x="568" y="88" width="392" height="116" rx="4" fill="none" stroke="var(--lock)" stroke-width="1.8"/>
+        <text x="588" y="117" font-size="18" font-weight="700" fill="var(--lock)">6X48</text>
+        <text x="654" y="117" font-size="12.5" fill="var(--muted)">2.9 Å — blurrier</text>
+        <text x="588" y="146" font-size="11.5" fill="var(--muted)">bound ligand UP4 shares our series core</text>
+        <text x="588" y="171" font-size="12" fill="var(--good)">✓ the pocket is already holding our chemotype</text>
+        <text x="588" y="190" font-size="11" fill="var(--muted)">an induced fit we would otherwise have to guess at</text>
+
+        <line x1="500" y1="212" x2="500" y2="234" stroke="var(--lock)" stroke-width="1.4" fill="none" marker-end="url(#c1)"/>
+        <rect x="170" y="234" width="660" height="54" rx="4" fill="none" stroke="var(--lock)" stroke-width="1.6"/>
+        <text x="500" y="257" text-anchor="middle" font-size="12.5" fill="var(--lock)">design against 6X48; keep 5MRI as the fallback if pose quality disappoints</text>
+        <text x="500" y="276" text-anchor="middle" font-size="10.5" fill="var(--muted)">and say plainly that 2.9 Å carries triage and shape work, not contact-level optimisation</text>
+      </g>
+    </svg>
+  </figure>
+  <div class="strip">
+    <span><b>series core</b> CC(C)(C)CCC(N)C(=O)O</span>
+    <span><b>⊂ UP4, bound in 6X48</b> CC(C)(C)CCC(C(=O)O)NC(=O)c1cc(cc(c1)Cl)Cl</span>
+    <span><b>→ True</b></span>
+  </div>
+  </div>
+  <div class="land"><b>Why the choice is graded “inferred”.</b> That UP4 contains the
+    core is computed and reproducible. That 6X48 is <i>therefore</i> the right receptor is
+    a conclusion — no database states it, so the citation check has nothing to re-fetch.
+    The grade is how the dossier tells a reader which line to check themselves.</div>
+
+  <aside class="notes">The medicinal chemistry heart of the project, and the slide a chemist in the room will actually engage with.
+
+Say it plainly: we recommend the blurrier structure. 6X48 at 2.9 Å over 5MRI at 2.00 Å, because the ligand bound in 6X48 contains the core our series is built on. The pocket is already holding our chemotype, side chains and all — an induced fit we would otherwise be guessing at.
+
+Then the grading point. The substructure match is computed and reproducible. The conclusion that follows from it is not, so it is graded inferred. No database states "this is the right receptor", so the citation check has nothing to re-fetch. That distinction is what makes the dossier checkable rather than merely confident.</aside>
+</section>
+
+<!-- 6 ─ step 4 ───────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow"><span class="s">step 4</span><span>the five answers, and what each one decides</span><span class="t">3:00 – 3:45</span></div>
+  <h2>Five questions, then stop</h2>
+  <div class="body">
+    <div class="rows" style="flex:1">
+      <div class="q">
+        <span class="n">1</span><span class="k">Which structure do we design against?</span>
+        <span class="v">one named entry with a reason, not a shortlist</span>
+        <span class="f">→ resolution + ligand checks</span>
+      </div>
+      <div class="q">
+        <span class="n">2</span><span class="k">What chemical matter exists?</span>
+        <span class="v">distinct molecules and potency range — never the record count</span>
+        <span class="f">→ series-depth check</span>
+      </div>
+      <div class="q">
+        <span class="n">3</span><span class="k">Is there a congeneric series?</span>
+        <span class="v">138 unrelated singletons teach you nothing. 106 analogs on one
+          core give you an SAR gradient — the thing design actually optimises against</span>
+        <span class="f">→ series-depth check</span>
+      </div>
+      <div class="q dim">
+        <span class="n">4</span><span class="k">Is the field still active?</span>
+        <span class="v">context for a reader: a target nobody has published on for a
+          decade is worth flagging, but silence is not evidence about the protein</span>
+        <span class="f">→ gates nothing</span>
+      </div>
+      <div class="q">
+        <span class="n">5</span><span class="k">What is missing?</span>
+        <span class="v">every failed search and every demoted claim, listed even when empty</span>
+        <span class="f">→ the verdict</span>
+      </div>
+    </div>
+  </div>
+  <div class="land"><b>Question 3 is the one that decides most campaigns</b>, and question
+    4 is the one that decides nothing — it is reported, not weighed. Saying which is which
+    is part of the deliverable.</div>
+
+  <aside class="notes">Five questions, and what each one feeds.
+
+Question 3 is the one that decides most campaigns. 138 unrelated singletons and 106 analogs on one core are the same compound count and completely different projects — only one of them gives you an SAR gradient to optimise against.
+
+Question 4 is marked as gating nothing, deliberately. If someone asks why it is there at all, that is a fair hit and you should take it: it is context for a reader, it is not weighed, and replacing it with assay quality is already on the list. Saying it yourself is better than being caught.</aside>
+</section>
+
+<!-- 7 ─ steps 5 and 6 ────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow"><span class="s">steps 5 – 6</span><span>measure, then branch</span><span class="t">3:45 – 4:35</span></div>
+  <h2>The recommendation it wrote, then took back</h2>
+  <div class="body">
+  <figure>
+    <svg viewBox="0 0 1000 290" preserveAspectRatio="xMidYMin meet" role="img" aria-label="The first dossier commits to proceeding before any check is computed. Four check outcomes then produce four different recommendations: all passing confirms it, triage-quality resolution narrows it, and a thin series or no usable structure reverse it.">
+      <g font-family="var(--display)" font-size="12.5" fill="currentColor">
+        <rect x="8" y="6" width="984" height="48" rx="4" fill="none" stroke="var(--lock)" stroke-width="1.8"/>
+        <text x="24" y="27" font-family="var(--mono)" font-size="9.2" letter-spacing="1.2" fill="var(--lock)">DOSSIER v1 — WRITTEN BEFORE A SINGLE CHECK HAS BEEN COMPUTED</text>
+        <text x="24" y="46" font-size="12.5" fill="var(--lock)">“Tractable. Proceed on 6X48 with the pooled 138-compound series.”</text>
+
+        <g font-family="var(--mono)" font-size="9" letter-spacing="1.1" fill="var(--faint)">
+          <text x="8" y="78">THEN THE NUMBERS ARRIVE</text><text x="380" y="78">AND THE ANSWER BECOMES</text>
+        </g>
+        <line x1="8" y1="86" x2="992" y2="86" stroke="currentColor" opacity=".3"/>
+
+        <text x="8" y="110">the series holds up, structure ≤ 2.5 Å</text>
+        <text x="380" y="110">proceed — hand over the receptor, the site and the series</text>
+        <text x="992" y="110" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--muted)">confirmed</text>
+        <line x1="8" y1="126" x2="992" y2="126" stroke="currentColor" opacity=".14"/>
+
+        <text x="8" y="150" fill="var(--lock)">best structure only 2.9 Å</text>
+        <text x="380" y="150" fill="var(--lock)">proceed, but triage and shape work only</text>
+        <text x="992" y="150" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--lock)">narrowed</text>
+        <line x1="8" y1="166" x2="992" y2="166" stroke="currentColor" opacity=".14"/>
+
+        <text x="8" y="190" fill="var(--bad)">&lt; 20 analogs, or under 2 logs of potency</text>
+        <text x="380" y="190" fill="var(--bad)">not ready — no SAR to learn; go ligand-based or make data</text>
+        <text x="992" y="190" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--bad)">reversed</text>
+        <line x1="8" y1="206" x2="992" y2="206" stroke="currentColor" opacity=".14"/>
+
+        <text x="8" y="230" fill="var(--bad)">nothing better than 3.5 Å, or only a fragment bound</text>
+        <text x="380" y="230" fill="var(--bad)">not tractable this way — no pocket to design into</text>
+        <text x="992" y="230" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--bad)">reversed</text>
+        <line x1="8" y1="246" x2="992" y2="246" stroke="currentColor" opacity=".14"/>
+
+        <text x="8" y="272" font-size="11.5" fill="var(--key)">On the live run the second row fired. The agent narrowed its own recommendation using a number it had not yet computed when it wrote the first one.</text>
+      </g>
+    </svg>
+  </figure>
+  <div class="strip">
+    <span><b>184 tests</b>, written before the code</span>
+    <span><b>5 scouts</b> in parallel</span>
+    <span><b>0 target names</b> in the agent, enforced per commit</span>
+  </div>
+  </div>
+  <div class="land"><b>Spend the most time here.</b> A dossier that only states a
+    conclusion cannot be wrong in public. This one commits, measures, and is allowed to
+    contradict itself on stage.</div>
+
+  <aside class="notes">The longest segment, and judging criterion one.
+
+The top box was written before a single check existed. Say that twice — it is the whole point and it goes past people the first time.
+
+Then walk the four rows and land on the second: on the live run the agent narrowed its own recommendation using a number it had not yet computed when it wrote the first version.
+
+If you have both dossiers open, show v1 and v2 side by side here rather than describing them. The strip along the bottom is there if someone asks about rigour; do not read it out.</aside>
+</section>
+
+<!-- 8 ─ limits ───────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="eyebrow"><span>the honest caveat</span><span class="t">4:35 – 5:00</span></div>
+  <h2>Tractable is not the same as working</h2>
+  <div class="body">
+    <p style="font-size:1.04em">Sortilin is the clearance receptor for progranulin.
+      Blocking it raises progranulin — which is exactly what an anti-sortilin antibody
+      did in patients. <b style="color:var(--ink)">It moved the biomarker and still
+      missed its Phase 3 endpoint.</b></p>
+    <div class="chips" style="margin-top:.3em">
+      <div class="chip"><b>what it answers</b>whether the chemistry can start: a pocket,
+        a series, and which structure to use</div>
+      <div class="chip"><b>what it does not</b>whether the biology pays out — no
+        synthesis, no assay, no docking, no free energy</div>
+      <div class="chip"><b>known gap</b>grouping compounds into a series needs a
+        structure per compound, which one scout does not yet fetch; question 3 says so
+        rather than guessing</div>
+    </div>
+  </div>
+  <div class="land"><b>Close here.</b> A target assessment tells you whether a campaign
+    can begin, not whether it should have. Stating that difference is part of the
+    deliverable.</div>
+
+  <aside class="notes">Close on the caveat, not on a claim.
+
+Sortilin clears progranulin. Blocking it raises progranulin. An anti-sortilin antibody did exactly that in patients and still missed its Phase 3 endpoint. So a tractability call tells you whether the chemistry can start — not whether it should have.
+
+Name the known gap yourself: grouping compounds into a series needs a chemical structure per compound, and one scout does not fetch that yet, so question 3 says so rather than guessing.
+
+Then stop. Do not add a summary slide.</aside>
+</section>
+
+</div>
+
+<div id="notes"></div>
+
+<div id="rail">
+  <button id="prev" aria-label="Previous slide">◀ PREV</button>
+  <button id="next" aria-label="Next slide">NEXT ▶</button>
+  <span><b id="n">1</b> / 8</span>
+  <div id="bar"><div id="fill"></div></div>
+  <span><b>5:00</b> total</span>
+  <span>← → · space · click</span>
+</div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var fill = document.getElementById('fill');
+  var num = document.getElementById('n');
+  var i = 0;
+
+  var panel = document.getElementById('notes');
+
+  function show(next) {
+    i = Math.max(0, Math.min(slides.length - 1, next));
+    slides.forEach(function (s, k) { s.classList.toggle('on', k === i); });
+    num.textContent = i + 1;
+    fill.style.width = ((i + 1) / slides.length * 100) + '%';
+    if (location.hash !== '#' + (i + 1)) history.replaceState(null, '', '#' + (i + 1));
+    var n = slides[i].querySelector('.notes');
+    panel.innerHTML = '<b>speaker notes · slide ' + (i + 1) + '</b>';
+    panel.appendChild(document.createTextNode(n ? n.textContent.trim() : ''));
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { show(i + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(i - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+    else if (e.key === 'n' || e.key === 'N') { panel.classList.toggle('on'); }
+  });
+  document.getElementById('next').addEventListener('click', function () { show(i + 1); });
+  document.getElementById('prev').addEventListener('click', function () { show(i - 1); });
+  document.getElementById('deck').addEventListener('click', function (e) {
+    if (e.target.closest('button')) return;
+    show(i + 1);
+  });
+
+  var start = parseInt((location.hash || '').slice(1), 10);
+  show(isNaN(start) ? 0 : start - 1);
+})();
+</script>
