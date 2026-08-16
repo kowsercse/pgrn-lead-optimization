@@ -13,6 +13,7 @@ Project direction is **not settled yet** — ask before assuming a target, modal
 
 ## Docs
 
+- [`docs/getting-started.md`](docs/getting-started.md) — requirements + step-by-step to run everything
 - [`docs/tools.md`](docs/tools.md) — sponsor platforms, what each can do, source links
 - [`docs/setup.md`](docs/setup.md) — step-by-step install instructions per tool
 - [`docs/resources/`](docs/resources/) — original sponsor slides

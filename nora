@@ -394,7 +394,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    args = build_parser().parse_args()
+    parser = build_parser()
+    if len(sys.argv) == 1:
+        parser.print_help()
+        return
+    args = parser.parse_args()
 
     if args.command == "setup":
         setup()

@@ -8,22 +8,16 @@ Project direction is not settled yet.
 
 - `python/` — Python code
 - `docs/` — documentation
-- `ui/` — empty, reserved for a future UI
+- `ui/` — React + Vite dashboard for the screening pipeline
 - `spec/` — spec docs for Claude
 
 ## Docs
 
+- [`docs/getting-started.md`](docs/getting-started.md) — requirements + step-by-step to run everything
 - [`docs/tools.md`](docs/tools.md) — sponsor platforms and what they can do
 - [`docs/setup.md`](docs/setup.md) — step-by-step install instructions per tool
 - [`docs/resources/`](docs/resources/) — original sponsor slides
 
-## Requirements
+## Getting started
 
-- Python >=3.13
-
-## Setup
-
-```bash
-cd python
-uv sync
-```
+See [`docs/getting-started.md`](docs/getting-started.md).
