@@ -57,6 +57,15 @@ CREATE TABLE IF NOT EXISTS gap (
     reason      TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS resolution (
+    record_id    TEXT PRIMARY KEY,
+    resolved     INTEGER NOT NULL,
+    fetched_at   TEXT,
+    span_found   INTEGER,
+    demoted_from TEXT,
+    note         TEXT NOT NULL DEFAULT ''
+);
+
 CREATE INDEX IF NOT EXISTS record_by_run ON record(run_id, grade);
 CREATE INDEX IF NOT EXISTS gap_by_run ON gap(run_id);
 """
