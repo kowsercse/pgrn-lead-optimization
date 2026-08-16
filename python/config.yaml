@@ -11,9 +11,6 @@ target:
   # Tool compounds co-crystallized in the structures above — seeds for ligand mining.
   known_ligand_names: ["Compound 17", "Compound 24", "Compound 2"]
 
-structure_quality:
-  chains: null # null = score every polymer chain found in the structure
-
 structure_prediction:
   # Used only when structure_agent falls back from fetch_pdb_structure (no experimental structure).
   engine: boltz2 # boltz2 | chai1 | alphafold3 | rf3
@@ -35,8 +32,17 @@ interface:
 ligand_mining:
   pubchem_query_field: name # name | smiles | cid
 
-screening_library:
-  candidate_smiles_file: null # path to a .smi/.sdf virtual-screening candidate set; set before running dock_library
+odesign:
+  # Generative screening (spec/fixes_0.md) — replaces the old static-library assemble+dock flow.
+  num_generations: 50
+  population_size: 10
+  dock_every_n_generations: 10 # only dock every Nth generation (Vina is the expensive step)
+  affinity_best_kcal_mol: -12.0 # Vina affinities map onto a 0-1 scale between these two bounds
+  affinity_worst_kcal_mol: -4.0
+  score_weights:
+    model_score: 0.4 # ODesign's own predicted binding-affinity/complementarity score
+    docking_score: 0.4 # Vina affinity (only present on docked generations)
+    ligand_similarity: 0.2 # similarity to the known-ligand seeds
 
 docking:
   engine: vina

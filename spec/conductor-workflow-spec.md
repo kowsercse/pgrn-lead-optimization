@@ -37,7 +37,7 @@ Sequential pipeline (`>>`), one agent per diagram stage:
 | 2 | `structure_agent` | `fetch_pdb_structure`, `predict_complex_structure` (Boltz2/Chai1, not Biohub — see below), `score_structure_quality` (`structure.py`) | Structural modeling |
 | 3 | `interface_agent` | `map_interface_pocket` (`interface.py`) | Interface mapping |
 | 4 | `ligand_mining_agent` | `search_known_ligands` (`ligands.py`) | Ligand mining |
-| 5 | `screening_agent` | `assemble_screening_library`, `dock_library`, `validate_positive_controls` (`screening.py`) | Library + docking (incl. validation gate) |
+| 5 | `screening_agent` | `odesign_screening`, `validate_positive_controls` (`screening.py`) | Generative screening + docking (incl. validation gate) |
 | 6 | `triage_agent` | `filter_hits` (`triage.py`) | Hit triage |
 | 7 | `admet_agent` | `predict_admet` (`admet.py`) | ADMET profiling |
 | 8 | `prioritization_agent` | `rank_and_handoff` (`prioritization.py`) | Prioritization |

@@ -21,10 +21,6 @@ class TargetConfig(BaseModel):
     known_ligand_names: list[str] = []
 
 
-class StructureQualityConfig(BaseModel):
-    chains: list[str] | None = None
-
-
 class StructurePredictionConfig(BaseModel):
     engine: str = "boltz2"
     use_msa: bool = True
@@ -43,8 +39,15 @@ class LigandMiningConfig(BaseModel):
     pubchem_query_field: str = "name"
 
 
-class ScreeningLibraryConfig(BaseModel):
-    candidate_smiles_file: str | None = None
+class OdesignConfig(BaseModel):
+    num_generations: int = 50
+    population_size: int = 10
+    dock_every_n_generations: int = 10
+    # Vina affinities (kcal/mol) mapped onto a 0-1 "higher is better" scale for
+    # blending with the model/similarity scores; values outside this range clamp.
+    affinity_best_kcal_mol: float = -12.0
+    affinity_worst_kcal_mol: float = -4.0
+    score_weights: dict[str, float] = {"model_score": 0.4, "docking_score": 0.4, "ligand_similarity": 0.2}
 
 
 class DockingConfig(BaseModel):
@@ -85,11 +88,10 @@ class PrioritizationConfig(BaseModel):
 class PipelineConfig(BaseModel):
     llm_model: str = "anthropic/claude-sonnet-4-6"
     target: TargetConfig
-    structure_quality: StructureQualityConfig = StructureQualityConfig()
     structure_prediction: StructurePredictionConfig = StructurePredictionConfig()
     interface: InterfaceConfig = InterfaceConfig()
     ligand_mining: LigandMiningConfig = LigandMiningConfig()
-    screening_library: ScreeningLibraryConfig = ScreeningLibraryConfig()
+    odesign: OdesignConfig = OdesignConfig()
     docking: DockingConfig = DockingConfig()
     hit_triage: HitTriageConfig = HitTriageConfig()
     admet: AdmetConfig = AdmetConfig()

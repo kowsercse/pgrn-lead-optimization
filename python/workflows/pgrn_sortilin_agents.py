@@ -28,7 +28,7 @@ from workflows.tools.admet import predict_admet
 from workflows.tools.interface import map_interface_pocket
 from workflows.tools.ligands import search_known_ligands
 from workflows.tools.prioritization import rank_and_handoff
-from workflows.tools.screening import assemble_screening_library, dock_library, validate_positive_controls
+from workflows.tools.screening import odesign_screening, validate_positive_controls
 from workflows.tools.structure import fetch_pdb_structure, predict_complex_structure, score_structure_quality
 from workflows.tools.triage import filter_hits
 
@@ -60,7 +60,8 @@ literature_agent = Agent(
 
 # ── 2. Structural modeling ───────────────────────────────────────────
 # Tools implemented in workflows/tools/structure.py (config-driven:
-# `structure_prediction` engine choice, `structure_quality.chains`).
+# `structure_prediction` engine choice). score_structure_quality branches on
+# structure origin — resolution/R-free for experimental, pLDDT for predicted.
 
 structure_agent = Agent(
     name="structure_agent",
@@ -111,18 +112,18 @@ ligand_mining_agent = Agent(
 )
 
 
-# ── 5. Library + docking ─────────────────────────────────────────────
-# Tools implemented in workflows/tools/screening.py (config-driven:
-# `screening_library.candidate_smiles_file`, `docking.*`).
+# ── 5. Generative screening + docking ─────────────────────────────────
+# Tools implemented in workflows/tools/screening.py (config-driven: `odesign.*`, `docking.*`).
 
 screening_agent = Agent(
     name="screening_agent",
     model=LLM_MODEL,
-    tools=[assemble_screening_library, dock_library, validate_positive_controls],
+    tools=[odesign_screening, validate_positive_controls],
     instructions=(
-        "Assemble the screening library, then dock_library against the interface "
-        "pocket. Always validate_positive_controls afterward — if controls fail "
-        "to recover their expected pose/rank, re-assemble the library and re-dock "
+        "Use odesign_screening to generate and dock candidate ligands against the "
+        "interface pocket — pass along any chemical structures literature_agent "
+        "reported as literature_seed_smiles. Always validate_positive_controls "
+        "afterward — if controls fail to recover a top-ranked affinity, flag it "
         "before reporting results."
     ),
 )

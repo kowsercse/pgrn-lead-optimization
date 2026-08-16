@@ -2,12 +2,14 @@
 
 fetch_pdb_structure tries RCSB first (real Sortilin-Progranulin co-crystal structures exist,
 e.g. 6X48/6X4H/6X3L). predict_complex_structure is the AI-cofolding fallback for targets with
-no experimental structure. score_structure_quality runs DSSP on whichever structure is used —
-mainly useful on the predicted-structure fallback path, since crystal structures are already
-solved.
+no experimental structure. score_structure_quality branches on which of the two produced the
+structure: experimental structures score via resolution/R-free (crystallographic quality
+signals), predicted structures score via the folding engine's own pLDDT-style confidence
+metric — DSSP secondary-structure percentages aren't a meaningful quality signal for either
+origin, so this tool no longer uses it (see spec/fixes_0.md).
 """
 
-from proto_tools.entities.structures import SingleChainSelection, Structure
+import requests
 from proto_tools.tools.database_retrieval.pdb.fetch_entry import (
     PdbFetchEntryConfig,
     PdbFetchEntryInput,
@@ -20,12 +22,6 @@ from proto_tools.tools.database_retrieval.pdb.fetch_fasta import (
 )
 from proto_tools.tools.structure_prediction.boltz2 import Boltz2Config, Boltz2Input, run_boltz2
 from proto_tools.tools.structure_prediction.chai1 import Chai1Config, Chai1Input, run_chai1
-from proto_tools.tools.structure_scoring.dssp import (
-    DSSPSecondaryStructureConfig,
-    DSSPSecondaryStructureInput,
-    DSSPStructureInput,
-    run_dssp_secondary_structure,
-)
 
 from conductor.ai.agents import tool
 from workflows.config import load_config
@@ -90,38 +86,79 @@ def predict_complex_structure(sequence_a: str, sequence_b: str) -> dict:
     }
 
 
+_RESOLUTION_BUCKETS = (
+    (1.5, "excellent"),
+    (2.5, "good"),
+    (3.5, "moderate"),
+)
+
+# proto-tools' predicted-metrics field names differ per engine; try in this
+# order (each engine always emits at least one of these — see their Metrics
+# classes' metric_spec "availability" notes).
+_PLDDT_FIELDS = ("complex_plddt", "avg_plddt", "confidence_score")
+
+
+def _resolution_bucket(resolution: float) -> str:
+    for cutoff, label in _RESOLUTION_BUCKETS:
+        if resolution <= cutoff:
+            return label
+    return "poor"
+
+
+def _plddt_bucket(plddt: float) -> str:
+    # proto-tools' predicted-metrics fields are normalized 0-1 (not AlphaFold's
+    # 0-100), so the standard pLDDT confidence bands are divided by 100 here.
+    if plddt >= 0.9:
+        return "very_high"
+    if plddt >= 0.7:
+        return "confident"
+    if plddt >= 0.5:
+        return "low"
+    return "very_low"
+
+
+def _fetch_r_free(pdb_id: str) -> float | None:
+    """R-free isn't exposed by proto-tools' PDB entry wrapper — fetch it directly."""
+    response = requests.get(f"https://data.rcsb.org/rest/v1/core/entry/{pdb_id}", timeout=30)
+    response.raise_for_status()
+    refine = response.json().get("refine") or [{}]
+    return refine[0].get("ls_R_factor_R_free")
+
+
+def _score_experimental_structure(structure: dict) -> dict:
+    resolution = structure.get("resolution")
+    r_free = _fetch_r_free(structure["pdb_id"]) if structure.get("pdb_id") else None
+    return {
+        "origin": "experimental",
+        "resolution_angstrom": resolution,
+        "resolution_quality": _resolution_bucket(resolution) if resolution is not None else None,
+        "r_free": r_free,
+    }
+
+
+def _score_predicted_structure(structure: dict) -> dict:
+    metrics = structure.get("metrics", {})
+    plddt = next((metrics[field] for field in _PLDDT_FIELDS if metrics.get(field) is not None), None)
+    return {
+        "origin": "predicted",
+        "engine": structure.get("engine"),
+        "plddt": plddt,
+        "plddt_quality": _plddt_bucket(plddt) if plddt is not None else None,
+        "metrics": metrics,
+    }
+
+
 @tool
 def score_structure_quality(structure: dict) -> dict:
-    """Score a structure/complex model's secondary-structure quality with DSSP.
+    """Score a structure/complex model's quality.
 
-    Expects `structure` to carry either `structure_url` (fetch_pdb_structure output)
-    or `structure_pdb` (predict_complex_structure output), plus a `chains` list of
-    chain IDs; falls back to config.yaml's `structure_quality.chains` when omitted.
+    Branches on structure origin (spec/fixes_0.md): experimental structures
+    (fetch_pdb_structure output) score via resolution + R-free; predicted
+    structures (predict_complex_structure output) score via the folding
+    engine's own pLDDT-style confidence metric.
     """
-    source = structure.get("structure_url") or structure.get("structure_pdb")
-    if not source:
-        raise ValueError("structure must contain 'structure_url' or 'structure_pdb'")
-    is_url = bool(structure.get("structure_url"))
-
-    chain_ids = load_config().structure_quality.chains
-    if not chain_ids:
-        chain_ids = (Structure.from_url(source) if is_url else Structure(structure=source)).get_chain_ids()
-
-    results = []
-    for chain_id in chain_ids:
-        base = Structure.from_url(source) if is_url else Structure(structure=source)
-        dssp_input = DSSPSecondaryStructureInput(
-            inputs=[DSSPStructureInput(structure=base, chain=SingleChainSelection(chain=chain_id))]
-        )
-        output = run_dssp_secondary_structure(dssp_input, DSSPSecondaryStructureConfig())
-        metrics = output.results[0]
-        results.append(
-            {
-                "chain_id": chain_id,
-                "helix_pct": metrics.helix_pct,
-                "sheet_pct": metrics.sheet_pct,
-                "loop_pct": metrics.loop_pct,
-            }
-        )
-
-    return {"per_chain": results}
+    if "engine" in structure:
+        return _score_predicted_structure(structure)
+    if structure.get("found") is False:
+        raise ValueError(f"structure {structure.get('pdb_id')!r} was not found — nothing to score")
+    return _score_experimental_structure(structure)
