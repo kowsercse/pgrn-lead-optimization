@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Architecture and 17-hour build plan for an agent that takes a protein target and returns structures, chemical matter, and a graded go/no-go on structure-based design.">
+<meta name="generator" content="docs/build_roadmap.py from docs/roadmap.md">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%AC%3C/text%3E%3C/svg%3E">
+<title>Target Dossier Agent</title>
+<style>
+/* Stylesheet for the generated roadmap page.
+   Targets plain semantic HTML, since the page is produced from roadmap.md by
+   docs/build_roadmap.py. Edit here for presentation; edit roadmap.md for content. */
+
+:root{
+  --ground:#F5F6F8; --surface:#FFFFFF; --surface-2:#EDEFF3;
+  --ink:#151922; --ink-2:#39414F; --muted:#5A6472; --faint:#8B95A3;
+  --rule:#DCE0E6; --rule-2:#C6CCD6;
+  --accent:#2E3A8C; --accent-soft:#E5E8F6;
+  --risk:#8A6516; --risk-soft:#F5EEDD; --reverse:#A33A2E;
+  --shadow:0 1px 2px rgba(21,25,34,.05), 0 8px 24px rgba(21,25,34,.05);
+  --display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --body:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#101219; --surface:#171A23; --surface-2:#1D212C;
+    --ink:#E6E9F0; --ink-2:#C3CAD6; --muted:#98A1B0; --faint:#727C8B;
+    --rule:#262B36; --rule-2:#333A48;
+    --accent:#8E99E8; --accent-soft:#1E2340;
+    --risk:#D6AC55; --risk-soft:#2A2211; --reverse:#E08476;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101219; --surface:#171A23; --surface-2:#1D212C;
+  --ink:#E6E9F0; --ink-2:#C3CAD6; --muted:#98A1B0; --faint:#727C8B;
+  --rule:#262B36; --rule-2:#333A48;
+  --accent:#8E99E8; --accent-soft:#1E2340;
+  --risk:#D6AC55; --risk-soft:#2A2211; --reverse:#E08476;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+}
+
+html{-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--body); font-size:16.5px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:44px 28px 96px}
+
+/* headings ---------------------------------------------------------------- */
+h1{
+  font-family:var(--display); font-weight:600;
+  font-size:clamp(32px,5vw,48px); line-height:1.08; letter-spacing:-.015em;
+  margin:0 0 10px; max-width:22ch; text-wrap:balance;
+}
+h1 + p{font-size:17px;color:var(--ink-2);max-width:62ch}
+h2{
+  font-family:var(--display); font-weight:600; font-size:26px;
+  letter-spacing:-.01em; line-height:1.2; text-wrap:balance;
+  margin:54px 0 18px; padding-top:12px; border-top:2px solid var(--ink);
+  max-width:100%;
+}
+h3{
+  font-family:var(--body); font-weight:650; font-size:16px;
+  margin:32px 0 8px; color:var(--ink);
+}
+
+/* text -------------------------------------------------------------------- */
+p,ul,ol{max-width:72ch}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 18px;padding-left:22px}
+li{margin:0 0 7px}
+li::marker{color:var(--muted)}
+strong{font-weight:650;color:var(--ink)}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+code{
+  font-family:var(--mono); font-size:.875em; background:var(--surface-2);
+  padding:1.5px 5px; border-radius:3px; color:var(--ink-2); overflow-wrap:break-word;
+}
+pre{
+  background:var(--surface-2); border:1px solid var(--rule); border-radius:3px;
+  padding:16px 18px; overflow-x:auto; margin:0 0 20px;
+}
+pre code{background:none;padding:0;font-size:13.5px;line-height:1.55}
+
+blockquote{
+  margin:0 0 22px; padding:16px 20px; max-width:72ch;
+  border:1px solid var(--rule); border-left:3px solid var(--risk);
+  background:var(--risk-soft); border-radius:3px;
+}
+blockquote p{margin:0 0 10px;font-size:15.5px}
+blockquote p:last-child{margin:0}
+
+/* figures ----------------------------------------------------------------- */
+figure{
+  margin:0 0 28px; padding:24px 24px 18px; background:var(--surface);
+  border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow);
+  overflow-x:auto;
+}
+figure svg{display:block;width:100%;max-width:100%;height:auto;min-width:520px;color:var(--ink)}
+figcaption{
+  font-size:13.5px; color:var(--muted); max-width:74ch;
+  margin-top:16px; padding-top:13px; border-top:1px solid var(--rule);
+}
+
+/* tables ------------------------------------------------------------------ */
+.scroll{
+  overflow-x:auto; margin:0 0 24px; background:var(--surface);
+  border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow);
+}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:600px}
+th{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted); text-align:left; font-weight:500;
+  padding:11px 16px; white-space:nowrap;
+  background:var(--surface-2); border-bottom:1px solid var(--rule-2);
+}
+td{padding:12px 16px;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:none}
+td[align="right"],th[align="right"]{text-align:right;font-variant-numeric:tabular-nums}
+
+hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
+
+@media (max-width:640px){
+  .wrap{padding:30px 20px 64px}
+  figure{padding:16px 16px 12px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1 id="roadmap--target-dossier-agent">Roadmap — target dossier agent</h1>
+<p>Input: a protein target. Output: a graded answer to <strong>whether this target is tractable for structure-based small-molecule drug design</strong> — with the receptor, the training set and the validation set already chosen, or a stated reason not to proceed.</p>
+<p>The agent runs no structure-based calculation of any kind — no docking, no free-energy methods, no molecular dynamics. It assesses tractability from public structural and bioactivity data and hands a specification to whoever has the compute.</p>
+<p>re:AGENT, Track A. Submission 10:45 AM Sun 16 Aug 2026; demos 12:30–14:00.</p>
+<h2 id="1-the-question">1. The question</h2>
+<p>Five questions, then stop:</p>
+<ol type="1">
+<li><strong>Is there a pocket, and which structure do we design against?</strong> One recommended receptor, its resolution and method, the ligand that defines the site, and why that entry over the alternatives.</li>
+<li><strong>What chemical matter exists, and how good is it?</strong> Distinct compounds with measured activity, potency range, assay types.</li>
+<li><strong>Is there a congeneric series?</strong> A related set supporting SAR reasoning, not scattered singletons.</li>
+<li><strong>What can serve as a held-out validation set?</strong> Ideally separated by time.</li>
+<li><strong>What is missing?</strong> A list, with the observation that would change the answer.</li>
+</ol>
+<p>The pipeline is <strong>fixed, not planned per question</strong>. Same five scouts, same sources, target is the only variable.</p>
+<blockquote>
+<p>Robin (Ghareeb et al., <em>Nature</em> 655, 497–505) built an agentic orchestrator for this class of task, measured it, and removed it: <em>"we observed that Robin almost always called tools in the same order, leading to a deterministic workflow. Therefore, we translated Robin into a streamlined Jupyter notebook to improve stability and ease of use."</em> When the question is well-typed the planner converges on one sequence anyway. Hard-code it and spend the budget on verification.</p>
+</blockquote>
+<h3 id="where-the-value-is">Where the value is</h3>
+<p>Any single query returns a list. The value is in the <strong>joins between sources</strong> — facts no individual scout produces. Two such joins decided the whole downstream plan for sortilin (section 4).</p>
+<h2 id="2-closing-the-loop">2. Closing the loop</h2>
+<p>A dossier that only recommends is a report. The loop is what makes it an agent: the dossier commits to an assessment, then names checks it has not yet computed. The checks run over the retrieved data, and the result rewrites the recommendation.</p>
+<figure><svg role="img" aria-label="One commitment at the top; three check outcomes below it, each producing a different recommendation, with the effect on the original named in the right-hand column" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 392">
+  <defs>
+    <marker id="lp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <g font-family="ui-sans-serif, -apple-system, sans-serif" fill="currentColor">
+
+    <!-- the commitment -->
+    <rect x="40" y="16" width="820" height="66" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+    <text x="58" y="38" font-size="10.5" font-family="ui-monospace, Menlo, monospace"
+          letter-spacing="1.2" fill="var(--accent)">DOSSIER v1 COMMITS</text>
+    <text x="58" y="60" font-size="13" fill="var(--accent)">SORT1 is tractable for structure-based design — use PDB 6X48,</text>
+    <text x="58" y="76" font-size="13" fill="var(--accent)">train on ChEMBL ≤ 2020, validate on PubChem AID 2202264</text>
+
+    <line x1="450" y1="82" x2="450" y2="106" stroke="currentColor" stroke-width="1.4" marker-end="url(#lp)"/>
+    <text x="466" y="100" font-size="11.5" font-style="italic">then five feasibility checks run over the retrieved data</text>
+
+    <!-- column headers -->
+    <g font-size="10" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.1" opacity=".75">
+      <text x="40" y="132">IF THE CHECKS SAY</text>
+      <text x="330" y="132">DOSSIER v2 RECOMMENDS</text>
+      <text x="862" y="132" text-anchor="end">EFFECT</text>
+    </g>
+    <line x1="40" y1="140" x2="860" y2="140" stroke="currentColor" stroke-width="1" opacity=".35"/>
+
+    <!-- row 1 -->
+    <text x="40" y="170" font-size="12.5">all five checks pass</text>
+    <line x1="292" y1="166" x2="320" y2="166" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
+    <text x="330" y="164" font-size="12.5">Proceed with SBDD on 6X48. Hand off the receptor,</text>
+    <text x="330" y="180" font-size="12.5">site, training set and holdout.</text>
+    <rect x="754" y="152" width="106" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1"/>
+    <text x="807" y="167" font-size="10.5" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">confirmed</text>
+    <line x1="40" y1="200" x2="860" y2="200" stroke="currentColor" stroke-width="1" opacity=".18"/>
+
+    <!-- row 2 -->
+    <text x="40" y="230" font-size="12.5">holdout overlap &gt; 0</text>
+    <line x1="292" y1="226" x2="320" y2="226" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
+    <text x="330" y="224" font-size="12.5" fill="var(--accent)">Withdraw the time-split claim. Hand off with a</text>
+    <text x="330" y="240" font-size="12.5" fill="var(--accent)">scaffold split instead.</text>
+    <rect x="754" y="212" width="106" height="22" rx="2" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
+    <text x="807" y="227" font-size="10.5" text-anchor="middle" fill="var(--accent)" font-family="ui-monospace, Menlo, monospace">changed</text>
+    <line x1="40" y1="260" x2="860" y2="260" stroke="currentColor" stroke-width="1" opacity=".18"/>
+
+    <!-- row 3 -->
+    <text x="40" y="290" font-size="12.5">one scaffold only, span &lt; 2 logs,</text>
+    <text x="40" y="306" font-size="12.5">or resolution worse than 3.5 Å</text>
+    <line x1="292" y1="292" x2="320" y2="292" stroke="currentColor" stroke-width="1.2" marker-end="url(#lp)"/>
+    <text x="330" y="290" font-size="12.5" fill="var(--reverse)">Not tractable for structure-based design. Go ligand-based,</text>
+    <text x="330" y="306" font-size="12.5" fill="var(--reverse)">or generate data first.</text>
+    <rect x="754" y="278" width="106" height="22" rx="2" fill="none" stroke="var(--reverse)" stroke-width="1.6"/>
+    <text x="807" y="293" font-size="10.5" text-anchor="middle" fill="var(--reverse)" font-family="ui-monospace, Menlo, monospace">reversed</text>
+    <line x1="40" y1="326" x2="860" y2="326" stroke="currentColor" stroke-width="1" opacity=".18"/>
+
+    <text x="40" y="356" font-size="11.5" font-style="italic">The agent writes the top box before it can see any of these numbers.</text>
+    <text x="40" y="374" font-size="11.5" font-style="italic">Two of the three rows overturn what it committed to.</text>
+  </g>
+</svg><figcaption>Read it top to bottom. The agent writes the boxed commitment first, before it can see any of the numbers. The five checks then run, and two of the three possible outcomes overturn what it committed to — one narrows the validation claim, the other reverses the recommendation entirely. The right-hand column names the effect so the change is legible without re-reading the top box.</figcaption></figure>
+<p><strong>Why these checks and not a structure-based calculation.</strong> Docking, free-energy methods and molecular dynamics are all out of scope — no GPU budget. But the loop does not need them. It needs a measurement the agent has not already seen, and the feasibility checks are exactly that: the assessment commits first, the numbers are computed second, and they can contradict it. All five run in RDKit on a laptop in seconds.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Computed from</th>
+<th>Flips the recommendation when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Holdout disjointness</td>
+<td>InChIKey set difference, train vs holdout</td>
+<td>Overlap &gt; 0 — the time-split claim fails</td>
+</tr>
+<tr>
+<td>Series size and scaffold diversity</td>
+<td>Murcko scaffolds over the retrieved series</td>
+<td>One scaffold, or fewer than ~20 analogs — SAR reasoning is unsupportable</td>
+</tr>
+<tr>
+<td>Activity range</td>
+<td>max/min pActivity in the series</td>
+<td>Span &lt; 2 log units — nothing to rank</td>
+</tr>
+<tr>
+<td>Receptor ligand quality</td>
+<td>MW and heavy-atom count of the bound ligand</td>
+<td>Below drug-like — the pocket is defined by a fragment or an additive</td>
+</tr>
+<tr>
+<td>Structure resolution</td>
+<td>Resolution and method of the recommended entry</td>
+<td>Worse than 2.5 Å — usable for triage and shape work, not for structure-guided optimisation</td>
+</tr>
+</tbody>
+</table></div>
+<p>To show the loop responds to evidence rather than to prompting, run it twice: once on sortilin, once on a target that fails a check. <strong>If the recommendation does not change between them, the loop is decorative and should be reported as such.</strong></p>
+<h2 id="3-the-pipeline">3. The pipeline</h2>
+<figure><svg role="img" aria-label="Target fans out to five source-bound scouts, through the resolver gate and join stage, to a dossier" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 396" role="img" aria-label="A target identifier fans out to five scouts bound to specific databases; their structured findings pass through a join stage that cross-references them, producing a dossier on which a scientist makes a go or no-go decision.">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+        </marker>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/>
+        </marker>
+      </defs>
+      <g font-family="ui-sans-serif, -apple-system, sans-serif" font-size="12.5" fill="currentColor">
+
+        <rect x="10" y="168" width="96" height="54" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="58" y="190" text-anchor="middle">Target</text>
+        <text x="58" y="207" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="11.5" opacity=".7">SORT1</text>
+
+        <!-- scouts -->
+        <g>
+          <rect x="176" y="24" width="248" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="192" y="46">Structures</text>
+          <text x="192" y="63" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">RCSB PDB · AlphaFold DB</text>
+
+          <rect x="176" y="92" width="248" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="192" y="114">Bioactivity</text>
+          <text x="192" y="131" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">ChEMBL · PubChem · BindingDB</text>
+
+          <rect x="176" y="160" width="248" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="192" y="182">Patents and clinical</text>
+          <text x="192" y="199" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">patent depositions · trials</text>
+
+          <rect x="176" y="228" width="248" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="192" y="250">Assays and tractability</text>
+          <text x="192" y="267" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">assay descriptions · readouts</text>
+
+          <rect x="176" y="296" width="248" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="192" y="318">Literature</text>
+          <text x="192" y="335" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">Paperclip · PubMed</text>
+        </g>
+
+        <!-- resolver + join -->
+        <rect x="486" y="86" width="182" height="62" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="502" y="110" font-size="12">Resolve citations</text>
+        <text x="502" y="128" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">fetch · confirm span · demote</text>
+
+        <rect x="486" y="164" width="182" height="112" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="577" y="188" text-anchor="middle" fill="var(--accent)">Join</text>
+        <g font-size="10.5" fill="var(--accent)" opacity=".85" font-family="ui-monospace, Menlo, monospace">
+          <text x="502" y="210">scaffold ↔ ligand</text>
+          <text x="502" y="228">InChIKey set ops</text>
+          <text x="502" y="246">alias resolution</text>
+          <text x="502" y="264">record vs compound</text>
+        </g>
+        <line x1="577" y1="148" x2="577" y2="158" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+
+        <!-- dossier -->
+        <rect x="716" y="140" width="126" height="92" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="779" y="172" text-anchor="middle">Dossier</text>
+        <text x="779" y="190" text-anchor="middle" font-size="10.5" opacity=".7">5 answers</text>
+        <text x="779" y="207" text-anchor="middle" font-size="10.5" opacity=".7">+ gaps</text>
+
+        <rect x="890" y="160" width="78" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="929" y="182" text-anchor="middle" font-size="11.5">Scientist</text>
+        <text x="929" y="199" text-anchor="middle" font-size="11.5">go / no-go</text>
+
+        <!-- arrows -->
+        <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#a1)">
+          <path d="M106,195 C140,195 140,50 170,50"/>
+          <path d="M106,195 C140,195 140,118 170,118"/>
+          <line x1="106" y1="188" x2="170" y2="186"/>
+          <path d="M106,195 C140,195 140,254 170,254"/>
+          <path d="M106,195 C140,195 140,322 170,322"/>
+        </g>
+        <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#a1)">
+          <path d="M424,50 C452,50 452,110 480,113"/>
+          <path d="M424,118 C452,118 452,115 480,116"/>
+          <path d="M424,186 C452,186 452,122 480,119"/>
+          <path d="M424,254 C452,254 452,126 480,121"/>
+          <path d="M424,322 C452,322 452,130 480,123"/>
+        </g>
+        <line x1="668" y1="220" x2="710" y2="192" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+        <line x1="842" y1="186" x2="884" y2="186" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+
+        <text x="440" y="368" text-anchor="middle" font-size="11" opacity=".65">every scout returns typed records with a resolvable source identifier and an evidence grade</text>
+      </g>
+    </svg><figcaption>The decomposition is fixed, not planned. The same five scouts run against the same sources for any target, so the only variable is the input. Each returns typed records rather than prose, which is what allows the join stage to operate on them mechanically instead of by re-reading summaries. Nothing reaches the join stage until its citation has been fetched and checked — see section 5.</figcaption></figure>
+<figure><svg role="img" aria-label="Reference run concurrency: 131 minutes of agent work in 39 minutes of wall clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 268" role="img" aria-label="Five scouts dispatched concurrently in the reference run; 131 minutes of total agent work completed in 39 minutes of wall clock, set by the longest-running scout.">
+      <defs>
+        <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g stroke="currentColor" opacity=".15">
+        <line x1="230" y1="24" x2="230" y2="218"/>
+        <line x1="390" y1="24" x2="390" y2="218"/>
+        <line x1="550" y1="24" x2="550" y2="218"/>
+        <line x1="710" y1="24" x2="710" y2="218"/>
+        <line x1="870" y1="24" x2="870" y2="218"/>
+      </g>
+      <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="currentColor" opacity=".55" text-anchor="middle">
+        <text x="230" y="236">0</text><text x="390" y="236">10</text><text x="550" y="236">20</text>
+        <text x="710" y="236">30</text><text x="870" y="236">40</text>
+        <text x="550" y="256" opacity=".85">minutes from dispatch</text>
+      </g>
+      <g font-family="ui-sans-serif, -apple-system, sans-serif" font-size="12" fill="currentColor">
+        <text x="214" y="44" text-anchor="end">Structures / tooling</text>
+        <text x="214" y="80" text-anchor="end">Prior art</text>
+        <text x="214" y="116" text-anchor="end">Target and data</text>
+        <text x="214" y="152" text-anchor="end">Sponsor integration</text>
+        <text x="214" y="188" text-anchor="end">Software stack</text>
+      </g>
+      <g fill="currentColor" opacity=".26">
+        <rect x="230" y="32" width="163" height="16" rx="4"/>
+        <rect x="230" y="68" width="272" height="16" rx="4"/>
+        <rect x="230" y="104" width="357" height="16" rx="4"/>
+        <rect x="230" y="140" width="365" height="16" rx="4"/>
+      </g>
+      <rect x="230" y="176" width="627" height="16" rx="4" fill="var(--accent)"/>
+      <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="currentColor" opacity=".7">
+        <text x="401" y="44">10.2</text><text x="510" y="80">17.0</text>
+        <text x="595" y="116">22.3</text><text x="603" y="152">22.8</text>
+      </g>
+      <text x="846" y="189" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#FFFFFF" text-anchor="end">39.2 · critical path</text>
+      <line x1="857" y1="24" x2="857" y2="218" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <text x="853" y="20" font-family="ui-sans-serif, -apple-system, sans-serif" font-size="11" fill="var(--accent)" text-anchor="end">wall clock 39 min</text>
+      <line x1="230" y1="218" x2="857" y2="218" stroke="currentColor" opacity=".35" marker-end="url(#d1)"/>
+    </svg><figcaption>Measured from the reference run. All five scouts were dispatched in one message and ran concurrently, so 131 minutes of agent work finished in the 39 minutes taken by the slowest. Total cost was 1,086,955 tokens across 436 tool calls — the figure the dossier's own cost line will report.</figcaption></figure>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Scout</th>
+<th>Returns</th>
+<th>Named check it must perform</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Structures</td>
+<td>PDB entries with resolution, method, bound ligand HET codes</td>
+<td>Count entries with a genuinely drug-like ligand separately from total entries. For sortilin that is 6–7, not the raw count</td>
+</tr>
+<tr>
+<td>Bioactivity</td>
+<td>Distinct compounds, potency range and median, assay types</td>
+<td><strong>Distinct compounds, not activity records.</strong> These differ by an order of magnitude; conflating them is the most common error in this task</td>
+</tr>
+<tr>
+<td>Patents/clinical</td>
+<td>Series with priority dates, applicant, potency, clinical stage</td>
+<td>Patent-derived sets are often in PubChem but absent from ChEMBL. Check both</td>
+</tr>
+<tr>
+<td>Assays</td>
+<td>Readouts available; what a computational score proxies</td>
+<td>Flag qHTS. A target can show tens of thousands of compounds where only a few hundred carry a real IC50</td>
+</tr>
+<tr>
+<td>Literature</td>
+<td>Mechanism, disease link, clinical outcomes including failures</td>
+<td>Search phenotypic and pathway aliases, not only the direct target — a published series on this pathway was filed under a non-molecular target ID and is invisible to target-centric queries</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-the-joins">4. The joins</h2>
+<figure><svg role="img" aria-label="The two cross-source joins, with their real identifiers" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 330" role="img" aria-label="Two cross-source joins. A patent series scaffold matched to a co-crystal ligand yields a chemotype-matched receptor. An InChIKey set difference between a ChEMBL set and a PubChem assay yields a prospective holdout with no overlap.">
+      <defs>
+        <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g font-family="ui-sans-serif, -apple-system, sans-serif" font-size="12" fill="currentColor">
+
+        <text x="14" y="20" font-size="11" font-family="ui-monospace, Menlo, monospace" opacity=".6">JOIN 1 — SCAFFOLD MATCH</text>
+
+        <rect x="14" y="34" width="222" height="50" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="28" y="55" font-size="11.5">Patent series core</text>
+        <text x="28" y="72" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">5,5-dimethyl-L-norleucine</text>
+
+        <rect x="14" y="98" width="222" height="50" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="28" y="119" font-size="11.5">Co-crystal ligand</text>
+        <text x="28" y="136" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">UP4 in PDB 6X48</text>
+
+        <circle cx="330" cy="91" r="27" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+        <text x="330" y="96" text-anchor="middle" font-size="15" fill="var(--accent)">≡</text>
+
+        <rect x="416" y="62" width="250" height="58" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="432" y="86" fill="var(--accent)" font-size="11.5">Receptor chemotype-matched</text>
+        <text x="432" y="104" fill="var(--accent)" font-size="11.5">to the series being scored</text>
+
+        <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#b1)">
+          <path d="M236,59 C280,59 280,80 300,84"/>
+          <path d="M236,123 C280,123 280,102 300,98"/>
+          <line x1="357" y1="91" x2="410" y2="91"/>
+        </g>
+        <text x="700" y="86" font-size="11" opacity=".7">docking a series into a</text>
+        <text x="700" y="102" font-size="11" opacity=".7">structure of its own chemotype</text>
+
+        <line x1="14" y1="176" x2="886" y2="176" stroke="currentColor" opacity=".2"/>
+
+        <text x="14" y="204" font-size="11" font-family="ui-monospace, Menlo, monospace" opacity=".6">JOIN 2 — SET DIFFERENCE ON INCHIKEY</text>
+
+        <rect x="14" y="218" width="222" height="50" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="28" y="239" font-size="11.5">ChEMBL, published ≤ 2020</text>
+        <text x="28" y="256" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">CHEMBL3091 + CHEMBL4680051</text>
+
+        <rect x="14" y="278" width="222" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="28" y="297" font-size="11.5">PubChem AID 2202264</text>
+        <text x="28" y="313" font-size="10.5" opacity=".7" font-family="ui-monospace, Menlo, monospace">106 cpds · priority Sep 2021</text>
+
+        <circle cx="330" cy="270" r="27" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+        <text x="330" y="276" text-anchor="middle" font-size="14" fill="var(--accent)">∖</text>
+
+        <rect x="416" y="242" width="250" height="58" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="432" y="266" fill="var(--accent)" font-size="11.5">Prospective holdout,</text>
+        <text x="432" y="284" fill="var(--accent)" font-size="11.5">verified disjoint</text>
+
+        <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#b1)">
+          <path d="M236,243 C280,243 280,258 300,263"/>
+          <path d="M236,300 C280,300 280,282 300,277"/>
+          <line x1="357" y1="270" x2="410" y2="270"/>
+        </g>
+        <text x="700" y="266" font-size="11" opacity=".7">a time split, not a random</text>
+        <text x="700" y="282" font-size="11" opacity=".7">or scaffold split</text>
+      </g>
+    </svg><figcaption>Both joins cross sources that no one query spans. The first pairs a patent's chemical claim against a structure database's ligand chemistry, yielding a receptor matched to the chemotype being scored. The second subtracts one compound set from another on canonical identifiers, yielding a validation set separated by publication date. Neither appears in any single database's output, and both changed the downstream plan.</figcaption></figure>
+<p>Join 2 yields a time split, not a random or scaffold split. Two more joins belong in the same stage. <strong>Alias resolution</strong> catches series filed against pathway or phenotypic identifiers. <strong>Record-versus-compound reconciliation</strong> corrects the counting error above; it already caused one correction in the reference run.</p>
+<h2 id="5-grading-and-the-resolver-gate">5. Grading and the resolver gate</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Grade</th>
+<th>Definition</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Measured</td>
+<td>The scout executed a query or tool and recorded the result</td>
+<td>Live ChEMBL API: 266 activities for CHEMBL3091, 37 for CHEMBL4680051</td>
+</tr>
+<tr>
+<td>Verified</td>
+<td>Read directly in a primary record</td>
+<td>PDB 6X48 contains ligand UP4; AID 2202264 lists 106 cpds, IC50 75 nM – 10 µM</td>
+</tr>
+<tr>
+<td>Documented</td>
+<td>Stated by an authoritative primary document</td>
+<td>Patent US20250268854A1, Vesper Bio, priority 3 Sep 2021</td>
+</tr>
+<tr>
+<td>Inferred</td>
+<td>Reasoned from evidence, not directly observed</td>
+<td>Scaffold equivalence pending an explicit substructure match</td>
+</tr>
+<tr>
+<td>Unverified</td>
+<td>Could not be established; reported as absent</td>
+<td>No deposited NCATS or Broad progranulin screen found in PubChem</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="the-resolver-gate">The resolver gate</h3>
+<p>A scout that fabricated a source will confidently grade its own claim <em>Verified</em>. Self-reported grades are worth what the retrieval layer beneath them is worth.</p>
+<p>Measured cost of not having one: in the Robin ablation, a scientist blinded to source attempted to locate every reference in ten proposals and found <strong>44.5 ± 6.37% of references from a raw frontier-model call were hallucinated</strong>, ~58% for drug-candidate proposals. Substituting a grounded retrieval agent brought fabricated references to zero.</p>
+<p><strong>The gate:</strong> every Verified or Documented claim carries a resolvable identifier — PDB or ChEMBL accession, PubChem AID, DOI, patent number, or a command. An independent resolver fetches it and confirms the quoted value is present. Failures auto-demote to Inferred and are flagged. The scout does not get the last word on its own reliability.</p>
+<h3 id="no-model-judged-ranking">No model-judged ranking</h3>
+<p>A published chemistry evaluation ran an LLM judge and human experts over the same outputs; the rankings inverted, the judge preferring fluent but incorrect answers. Of the three reference systems: ERA uses no judge at all; Co-Scientist concedes in its own figure caption that its Elo metric "is auto-evaluated and not based on independent ground truth"; Robin calibrates a pairwise judge against experts and shows only that it separates grossly grounded from ungrounded proposals, not that it orders by correctness.</p>
+<p>Findings are ordered deterministically: by evidence grade, then by whether the claim is load-bearing for the recommendation. Cost: the dossier cannot say "read this first" on any other basis.</p>
+<h3 id="beyond-the-reference-systems">Beyond the reference systems</h3>
+<p>None of the three papers reports what its system <em>could not</em> establish. Co-Scientist names the gap as its leading future direction — "agents with enhanced provenance capabilities to trace claims to specific figures or data within a source" — and separately concedes a "systemic lack of access to negative experimental results". A required, always-rendered gap list is the cheapest part of this build and has no prior art.</p>
+<h2 id="6-worked-output--the-sortilin-dossier">6. Worked output — the sortilin dossier</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+<th>Grade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Which receptor?</td>
+<td>PDB 6X48, 2.9 Å, chosen over the higher-resolution 5MRI (2.00 Å) because ligand UP4 shares the core of the series. <strong>2.9 Å is marginal for structure-guided optimisation</strong> — adequate for triage and shape work, not for modelling individual contacts. Both are handed off</td>
+<td>Verified</td>
+</tr>
+<tr>
+<td>Chemical matter?</td>
+<td>266 activities in CHEMBL3091, 37 in CHEMBL4680051. IC50 88 nM – 158 µM, median 1.4 µM. Six MST-derived Kd near 1 nM are outliers, excluded</td>
+<td>Measured</td>
+</tr>
+<tr>
+<td>Congeneric series?</td>
+<td>Yes — 106 cpds on a 5,5-dimethyl-L-norleucine core, 77 sub-µM, one patent family</td>
+<td>Verified</td>
+</tr>
+<tr>
+<td>Held-out set?</td>
+<td>PubChem AID 2202264, priority Sep 2021, absent from ChEMBL. Time split, pending InChIKey disjointness</td>
+<td>Inferred</td>
+</tr>
+<tr>
+<td>What is missing?</td>
+<td>Disjointness unconfirmed; no deposited progranulin HTS found; no docking has been run by anyone here, so tractability is assessed from structure and data, not demonstrated; latozinemab raised progranulin and missed its Phase 3 endpoint Oct 2025</td>
+<td>Unverified</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Recommendation: sortilin is tractable for structure-based design. Proceed on 6X48, with a resolution caveat.</strong> The target clears the bar that kills most such projects — a pocket with drug-like ligands bound, a congeneric series spanning two logs of potency, and a validation set separated by time. At 2.9 Å it supports triage and shape-based work; contact-level optimisation needs either 5MRI, which is not chemotype-matched, or a new structure.</p>
+<p><strong>Hand-off specification:</strong> receptor 6X48, box defined from the co-crystallized UP4 ligand; training set ChEMBL SORT1 published ≤2020; prospective validation on PubChem AID 2202264; fall back to 5MRI at 2.00 Å if pose quality on 6X48 proves inadequate.</p>
+<p><strong>Failure condition:</strong> if InChIKey disjointness fails, the prospective validation claim is withdrawn and the hand-off specifies a scaffold split instead. If the series collapses to a single Murcko scaffold or spans under two log units of activity, the recommendation inverts to <em>not yet ready for structure-based design</em>.</p>
+<p>Downstream of a go decision, the design loop was measured during scoping: 963 analogs generated, 823 surviving structural-alert and property gates, scored across 104 ADMET endpoints and ranked, in <strong>12.4 s</strong> on a laptop with no GPU and no network. <code>pip install rdkit crem admet-ai mol_ga</code> plus one fragment database. The dossier decides whether to point that loop at a target; it is not the loop.</p>
+<h3 id="target-landscape">Target landscape</h3>
+<figure><svg role="img" aria-label="Scatter of neurodegeneration targets by distinct compounds against liganded PDB structures, both log scales" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 352" role="img" aria-label="Scatter of neurodegeneration targets by distinct compounds with measured activity against liganded PDB structures, both on log scales. Sortilin sits at the low-data corner but above the minimum structural threshold, while progranulin itself has zero liganded structures.">
+      <g font-family="ui-sans-serif, -apple-system, sans-serif" font-size="11.5" fill="currentColor">
+
+        <!-- gridlines -->
+        <g stroke="currentColor" opacity=".14">
+          <line x1="90" y1="50" x2="90" y2="280"/>
+          <line x1="420" y1="50" x2="420" y2="280"/>
+          <line x1="751" y1="50" x2="751" y2="280"/>
+          <line x1="90" y1="280" x2="850" y2="280"/>
+          <line x1="90" y1="195" x2="850" y2="195"/>
+          <line x1="90" y1="110" x2="850" y2="110"/>
+        </g>
+
+        <!-- threshold -->
+        <line x1="90" y1="220" x2="850" y2="220" stroke="#8A6516" stroke-width="1.4" stroke-dasharray="5 4"/>
+        <text x="846" y="234" text-anchor="end" font-size="10.5" fill="#8A6516">5 liganded structures — below this there is nothing to dock into</text>
+
+        <!-- axis labels -->
+        <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" opacity=".6">
+          <text x="90" y="298" text-anchor="middle">100</text>
+          <text x="420" y="298" text-anchor="middle">1,000</text>
+          <text x="751" y="298" text-anchor="middle">10,000</text>
+          <text x="80" y="284" text-anchor="end">1</text>
+          <text x="80" y="199" text-anchor="end">10</text>
+          <text x="80" y="114" text-anchor="end">100</text>
+        </g>
+        <text x="470" y="322" text-anchor="middle" font-size="11.5" opacity=".8">distinct compounds with measured activity (log)</text>
+        <text x="26" y="165" text-anchor="middle" font-size="11.5" opacity=".8" transform="rotate(-90 26 165)">liganded PDB entries (log)</text>
+
+        <!-- comparator points -->
+        <g fill="currentColor" opacity=".55">
+          <circle cx="780" cy="59" r="5"/>
+          <circle cx="784" cy="166" r="5"/>
+          <circle cx="663" cy="142" r="5"/>
+          <circle cx="647" cy="166" r="5"/>
+          <circle cx="622" cy="208" r="5"/>
+          <circle cx="583" cy="208" r="5"/>
+          <circle cx="539" cy="142" r="5"/>
+          <circle cx="411" cy="203" r="5"/>
+        </g>
+        <g font-size="11" opacity=".78">
+          <text x="770" y="63" text-anchor="end">BACE1</text>
+          <text x="774" y="170" text-anchor="end">GBA1</text>
+          <text x="663" y="131" text-anchor="middle">LRRK2</text>
+          <text x="637" y="170" text-anchor="end">CSF1R</text>
+          <text x="632" y="212" text-anchor="start">CTSD</text>
+          <text x="573" y="212" text-anchor="end">CTSB</text>
+          <text x="539" y="131" text-anchor="middle">CTSL</text>
+          <text x="411" y="192" text-anchor="middle">OGA</text>
+        </g>
+
+        <!-- SORT1 -->
+        <circle cx="136" cy="208" r="9" fill="none" stroke="var(--accent)" stroke-width="1.4" opacity=".55"/>
+        <circle cx="136" cy="208" r="5.5" fill="var(--accent)"/>
+        <text x="150" y="205" font-size="12" fill="var(--accent)" font-weight="600">SORT1</text>
+        <text x="150" y="221" font-size="10.5" fill="var(--accent)" opacity=".85">138 cpds · 6–7 structures</text>
+
+        <!-- GRN annotation -->
+        <text x="90" y="344" font-size="11" fill="#A33A2E">GRN (progranulin itself): 0 liganded structures — off scale. This is why the program targets the clearance receptor, not the protein.</text>
+      </g>
+    </svg><figcaption>Sortilin is data-poor but structurally viable. Against neurodegeneration comparators it sits two orders of magnitude below BACE1 on compound count, yet clears the only threshold that decides whether docking is possible at all. Cathepsin L (CTSL), the protease that processes progranulin, is the natural second target and is plotted for that reason. Counts are distinct compounds carrying a pChEMBL value, and PDB entries whose bound ligand exceeds 250 Da and 15 heavy atoms.</figcaption></figure>
+<p>Distinct compounds carrying a pChEMBL value, against PDB entries whose bound ligand exceeds 250 Da and 15 heavy atoms:</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Target</th>
+<th style="text-align: right;">Distinct cpds</th>
+<th style="text-align: right;">Liganded PDB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BACE1</td>
+<td style="text-align: right;">12,299</td>
+<td style="text-align: right;">393</td>
+</tr>
+<tr>
+<td>GBA1</td>
+<td style="text-align: right;">12,616</td>
+<td style="text-align: right;">22</td>
+</tr>
+<tr>
+<td>LRRK2</td>
+<td style="text-align: right;">5,447</td>
+<td style="text-align: right;">42</td>
+</tr>
+<tr>
+<td>CSF1R</td>
+<td style="text-align: right;">4,857</td>
+<td style="text-align: right;">22</td>
+</tr>
+<tr>
+<td>CTSD</td>
+<td style="text-align: right;">4,082</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr>
+<td>CTSB</td>
+<td style="text-align: right;">3,117</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr>
+<td>CTSL</td>
+<td style="text-align: right;">2,286</td>
+<td style="text-align: right;">42</td>
+</tr>
+<tr>
+<td>OGA</td>
+<td style="text-align: right;">937</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr>
+<td><strong>SORT1</strong></td>
+<td style="text-align: right;"><strong>138</strong></td>
+<td style="text-align: right;"><strong>6–7</strong></td>
+</tr>
+<tr>
+<td>TREM2</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td><strong>GRN (progranulin)</strong></td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;"><strong>0</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>GRN itself has zero liganded structures — which is why the program targets the clearance receptor rather than the protein. SORT1 sits two orders of magnitude below BACE1 on compound count yet clears the only threshold that decides whether docking is possible at all. CTSL, the protease that processes progranulin, is the natural second target.</p>
+<p>Note: MAPT/tau was dropped. Its 67,457 compounds are inflated by three NCGC qHTS screens; only ~600 carry a real IC50, and most tau PDB entries are cryo-EM filaments or PET tracers rather than pocket co-crystals.</p>
+<h2 id="7-judging-alignment-track-a">7. Judging alignment (Track A)</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>How the design answers it</th>
+<th>Standing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Closing the loop</strong> — does the agent analyze data it hasn't seen and propose a next experiment that changes when the results change?</td>
+<td>Section 2. The dossier commits to an assessment, then five feasibility checks are computed over the retrieved data and can contradict it; each of three outcomes yields a different next step. Run on two targets, one of which fails a check, so the change is demonstrated rather than asserted</td>
+<td>Was the gap</td>
+</tr>
+<tr>
+<td><strong>Inspectability</strong> — can you reconstruct why the agent concluded what it did?</td>
+<td>Every record stores the exact query or command, an output hash for Measured claims, the source document's date alongside the retrieval timestamp, and an evidence grade. Each join emits its own graded record, so a conclusion traces to the specific cross-reference behind it</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td><strong>Validation</strong> — how do you know the output is correct, by some standard outside the agent's own reasoning?</td>
+<td>Three external standards: the resolver gate fetches every cited identifier and confirms the quoted value; the feasibility checks are deterministic computations the agent cannot argue with; the holdout series post-dates and is absent from all training data. No component ranks claims by asking a model which it prefers</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td><strong>Creative use of sponsor tools</strong></td>
+<td>Paperclip (the host's own tool) supplies the resolver's fetch-and-confirm layer via its virtual filesystem, where every document is a directory of full text, sections and figures. ChEMBL and PubMed MCP back two of the five scouts. No GPU compute is used — the assessment is retrieval plus deterministic cheminformatics, which is why it runs on a laptop</td>
+<td>Tied to criteria 2 and 3</td>
+</tr>
+</tbody>
+</table></div>
+<p>Every sponsor integration earns its place against another criterion. Paperclip is used because the resolver needs a fetch layer that can confirm a span inside a document, not because it is the host's product.</p>
+<p>Track A brief, verbatim: <em>"Build an AI agent that can carry out a defined scientific or drug-development workflow from start to finish. It should gather evidence, use relevant tools or databases, generate and test hypotheses, produce a structured output, and make its reasoning easy to inspect."</em> Contact: <a href="mailto:vanessa@gxl.ai">vanessa@gxl.ai</a>.</p>
+<h2 id="8-schedule-174-h">8. Schedule (17.4 h)</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sat 17:30–18:30</td>
+<td><strong>Record schema and store.</strong> Claim, value, grade, <em>resolvable</em> source id. Two dates (source date, retrieval timestamp). Exact query/command + output hash for Measured. Token/tool-call/wall-clock counters</td>
+</tr>
+<tr>
+<td>Sat 18:30–20:00</td>
+<td><strong>The five scouts.</strong> ChEMBL, PubMed, bioRxiv already connected via MCP; Paperclip working at v0.7.36. <strong>No spawn tool in any brief</strong> — a scout needing a sub-search returns <code>requested_subdomain</code>. Per-scout deadline; on expiry the domain enters the dossier as "not retrieved" and the run completes</td>
+</tr>
+<tr>
+<td>Sat 20:00–22:00</td>
+<td><strong>Resolver gate.</strong> Highest-value block. Every Verified/Documented identifier fetched independently and the quoted value confirmed. Failures demote to Inferred and flag</td>
+</tr>
+<tr>
+<td>Sat 22:00–23:30</td>
+<td><strong>Join stage.</strong> RDKit substructure matching, InChIKey set ops, alias resolution, record-vs-compound reconciliation. Each join emits its own graded record</td>
+</tr>
+<tr>
+<td>Sat 23:30–00:45</td>
+<td><strong>Dossier renderer.</strong> Five answers with grades and identifiers, gap list, recommendation with failure condition, cost line. Gap section renders even when empty</td>
+</tr>
+<tr>
+<td>Sun 00:45–01:45</td>
+<td><strong>Replicate decision-critical answers.</strong> Receptor choice and holdout disjointness, three fresh contexts each, agreement reported as a number. Robin runs 8 independent trajectories for this reason; ERA shows replicate spread 0.13–0.59 on the same method</td>
+</tr>
+<tr>
+<td>Sun 01:45–07:00</td>
+<td>Sleep, scheduled rather than optional</td>
+</tr>
+<tr>
+<td>Sun 07:00–08:00</td>
+<td><strong>Close the loop, both branches.</strong> Compute the five feasibility checks, feed them back, regenerate the dossier. Run on two targets, one of which fails a check, and capture the two different next steps. RDKit only — no GPU, no container, no Modal. This block answers the first judging criterion and nothing else in the build does</td>
+</tr>
+<tr>
+<td>Sun 08:00–09:30</td>
+<td><strong>Second target, cold.</strong> Never used during development; keep whatever it produces including a negative. Cathepsin L is the natural choice, being the protease that processes progranulin</td>
+</tr>
+<tr>
+<td>Sun 09:30–10:15</td>
+<td>Code freeze. Pre-compute both dossiers, cache figures, rehearse twice against a timer</td>
+</tr>
+<tr>
+<td>Sun 10:15–10:45</td>
+<td>Submit</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deferred">Deferred</h3>
+<ul>
+<li><strong>Assumption decomposition on load-bearing claims</strong> (3–4 h). Well evidenced (Co-Scientist's deep verification review) but does not fit alongside the resolver gate. The resolver wins because it fixes a hole that makes every grade untrustworthy.</li>
+<li><strong>Claim clustering before synthesis</strong> (2 h). Matters when agents overlap; our five scouts are disjoint by construction.</li>
+</ul>
+<h2 id="9-presentation-5-min-ordered-by-judging-weight">9. Presentation (5 min, ordered by judging weight)</h2>
+<ol type="1">
+<li><strong>The task, 25 s.</strong> Assembling a target dossier by hand takes a computational chemist several days. State the input and the five questions.</li>
+<li><strong>Run it cold, 45 s.</strong> Type a target; five scouts run concurrently; records accumulate.</li>
+<li><strong>The joins, 60 s.</strong> Scaffold match and set difference — what no single query returns.</li>
+<li><strong>The loop, 90 s.</strong> The dossier commits to an assessment, the feasibility checks run, the recommendation changes. Two targets side by side, two different next steps. <em>Most time here — first judging criterion, and the one most projects will not have.</em></li>
+<li><strong>The resolver firing, 30 s.</strong> A claim demoted from Verified to Inferred because its identifier did not resolve.</li>
+<li><strong>Open a claim, 30 s.</strong> Click any answer; show the exact query, output hash, source date and retrieval timestamp. Inspectability answered in one gesture.</li>
+<li><strong>Limitations, 30 s.</strong> Retrieval and reasoning over public data; nothing synthesized or assayed. Sortilin biology is validated for engagement, not efficacy.</li>
+</ol>
+<h2 id="10-risks">10. Risks</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Indicator</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The loop does not actually loop</td>
+<td>The revised dossier proposes the same next step regardless of the check results</td>
+<td>The criterion this build most depends on. Test on a target that fails a check. If the recommendation is invariant, say so on stage — a reported negative is survivable, a discovered one is not</td>
+</tr>
+<tr>
+<td>The dossier reads as a literature review</td>
+<td>Sections summarize rather than answer</td>
+<td>Most likely failure. Each of the five answers must be one committed choice with a reason</td>
+</tr>
+<tr>
+<td>The joins find nothing on the cold target</td>
+<td>No scaffold match, no disjoint set</td>
+<td>Report it. "No congeneric series, no held-out set, do not proceed" is a correct and useful output. Keep sortilin as the positive example</td>
+</tr>
+<tr>
+<td>Fabricated identifiers pass as verified</td>
+<td>A citation looks plausible and resolves to nothing</td>
+<td>The resolver gate is not optional and not a scout behaviour. This is the failure that would most damage credibility if a judge checked a reference on stage</td>
+</tr>
+<tr>
+<td>Compound counts are wrong</td>
+<td>Activity records reported as distinct compounds</td>
+<td>Reconciliation is a named join, not a convention</td>
+</tr>
+<tr>
+<td>Someone runs a structure-based calculation</td>
+<td>"It's only an hour on Modal"</td>
+<td>Out of scope by decision, not by oversight. No GPU budget; <code>pip install vina</code> has no Apple Silicon wheel. The agent assesses SBDD tractability and does not perform SBDD. Reinstating it costs the loop its only free measurement</td>
+</tr>
+<tr>
+<td>A scout hangs</td>
+<td>One source never returns</td>
+<td>Per-scout deadline, domain marked unretrieved. A missing source is a gap-list entry, not a crash. One agent hung in the reference run</td>
+</tr>
+<tr>
+<td>Repository access</td>
+<td>Pull-only permission upstream</td>
+<td>Fork and open PRs, or request collaborator access. Resolve before the first commit</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="provenance">Provenance</h2>
+<p>Compiled 15 August 2026. The sortilin dossier in section 5 is real output from a reference run of five concurrent research agents: 1,086,955 tokens, 436 tool calls, 131 minutes of agent work in 39 minutes of wall clock.</p>
+<p>Design decisions in sections 1, 4 and 6 are grounded in three systems read in full: Gottweis et al., <em>Nature</em> 655, 487–496 (2026); Ghareeb et al., <em>Nature</em> 655, 497–505 (2026); Aygün et al., <em>Nature</em> 654, 909–916 (2026). Where their reported evidence is weak — self-evaluated ranking metrics, small expert panels, constructed speedup baselines — this roadmap says so rather than borrowing the claim.</p>
+<p>Unverified: InChIKey disjointness between training and holdout, which the feasibility checks will settle; the judging rubric, prizes and judge roster, which are not published. Docking tractability is assessed from structure and data, never demonstrated — no docking is run by this project. Confirm the submission time against the acceptance email.</p>
+</div>
+</body>
+</html>

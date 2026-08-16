@@ -1,0 +1,123 @@
+/* Stylesheet for the generated roadmap page.
+   Targets plain semantic HTML, since the page is produced from roadmap.md by
+   docs/build_roadmap.py. Edit here for presentation; edit roadmap.md for content. */
+
+:root{
+  --ground:#F5F6F8; --surface:#FFFFFF; --surface-2:#EDEFF3;
+  --ink:#151922; --ink-2:#39414F; --muted:#5A6472; --faint:#8B95A3;
+  --rule:#DCE0E6; --rule-2:#C6CCD6;
+  --accent:#2E3A8C; --accent-soft:#E5E8F6;
+  --risk:#8A6516; --risk-soft:#F5EEDD; --reverse:#A33A2E;
+  --shadow:0 1px 2px rgba(21,25,34,.05), 0 8px 24px rgba(21,25,34,.05);
+  --display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --body:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#101219; --surface:#171A23; --surface-2:#1D212C;
+    --ink:#E6E9F0; --ink-2:#C3CAD6; --muted:#98A1B0; --faint:#727C8B;
+    --rule:#262B36; --rule-2:#333A48;
+    --accent:#8E99E8; --accent-soft:#1E2340;
+    --risk:#D6AC55; --risk-soft:#2A2211; --reverse:#E08476;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101219; --surface:#171A23; --surface-2:#1D212C;
+  --ink:#E6E9F0; --ink-2:#C3CAD6; --muted:#98A1B0; --faint:#727C8B;
+  --rule:#262B36; --rule-2:#333A48;
+  --accent:#8E99E8; --accent-soft:#1E2340;
+  --risk:#D6AC55; --risk-soft:#2A2211; --reverse:#E08476;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+}
+
+html{-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--body); font-size:16.5px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:44px 28px 96px}
+
+/* headings ---------------------------------------------------------------- */
+h1{
+  font-family:var(--display); font-weight:600;
+  font-size:clamp(32px,5vw,48px); line-height:1.08; letter-spacing:-.015em;
+  margin:0 0 10px; max-width:22ch; text-wrap:balance;
+}
+h1 + p{font-size:17px;color:var(--ink-2);max-width:62ch}
+h2{
+  font-family:var(--display); font-weight:600; font-size:26px;
+  letter-spacing:-.01em; line-height:1.2; text-wrap:balance;
+  margin:54px 0 18px; padding-top:12px; border-top:2px solid var(--ink);
+  max-width:100%;
+}
+h3{
+  font-family:var(--body); font-weight:650; font-size:16px;
+  margin:32px 0 8px; color:var(--ink);
+}
+
+/* text -------------------------------------------------------------------- */
+p,ul,ol{max-width:72ch}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 18px;padding-left:22px}
+li{margin:0 0 7px}
+li::marker{color:var(--muted)}
+strong{font-weight:650;color:var(--ink)}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+code{
+  font-family:var(--mono); font-size:.875em; background:var(--surface-2);
+  padding:1.5px 5px; border-radius:3px; color:var(--ink-2); overflow-wrap:break-word;
+}
+pre{
+  background:var(--surface-2); border:1px solid var(--rule); border-radius:3px;
+  padding:16px 18px; overflow-x:auto; margin:0 0 20px;
+}
+pre code{background:none;padding:0;font-size:13.5px;line-height:1.55}
+
+blockquote{
+  margin:0 0 22px; padding:16px 20px; max-width:72ch;
+  border:1px solid var(--rule); border-left:3px solid var(--risk);
+  background:var(--risk-soft); border-radius:3px;
+}
+blockquote p{margin:0 0 10px;font-size:15.5px}
+blockquote p:last-child{margin:0}
+
+/* figures ----------------------------------------------------------------- */
+figure{
+  margin:0 0 28px; padding:24px 24px 18px; background:var(--surface);
+  border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow);
+  overflow-x:auto;
+}
+figure svg{display:block;width:100%;max-width:100%;height:auto;min-width:520px;color:var(--ink)}
+figcaption{
+  font-size:13.5px; color:var(--muted); max-width:74ch;
+  margin-top:16px; padding-top:13px; border-top:1px solid var(--rule);
+}
+
+/* tables ------------------------------------------------------------------ */
+.scroll{
+  overflow-x:auto; margin:0 0 24px; background:var(--surface);
+  border:1px solid var(--rule); border-radius:3px; box-shadow:var(--shadow);
+}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:600px}
+th{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted); text-align:left; font-weight:500;
+  padding:11px 16px; white-space:nowrap;
+  background:var(--surface-2); border-bottom:1px solid var(--rule-2);
+}
+td{padding:12px 16px;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:none}
+td[align="right"],th[align="right"]{text-align:right;font-variant-numeric:tabular-nums}
+
+hr{border:none;border-top:1px solid var(--rule);margin:44px 0}
+
+@media (max-width:640px){
+  .wrap{padding:30px 20px 64px}
+  figure{padding:16px 16px 12px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

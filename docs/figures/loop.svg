@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="392" viewBox="0 0 900 392">
+  <defs>
+    <marker id="lp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#6B7280"/>
+    </marker>
+  </defs>
+  <g font-family="ui-sans-serif, -apple-system, sans-serif" fill="#6B7280">
+
+    <!-- the commitment -->
+    <rect x="40" y="16" width="820" height="66" rx="3" fill="none" stroke="#7C89E8" stroke-width="1.8"/>
+    <text x="58" y="38" font-size="10.5" font-family="ui-monospace, Menlo, monospace"
+          letter-spacing="1.2" fill="#7C89E8">DOSSIER v1 COMMITS</text>
+    <text x="58" y="60" font-size="13" fill="#7C89E8">SORT1 is tractable for structure-based design — use PDB 6X48,</text>
+    <text x="58" y="76" font-size="13" fill="#7C89E8">train on ChEMBL ≤ 2020, validate on PubChem AID 2202264</text>
+
+    <line x1="450" y1="82" x2="450" y2="106" stroke="#6B7280" stroke-width="1.4" marker-end="url(#lp)"/>
+    <text x="466" y="100" font-size="11.5" font-style="italic">then five feasibility checks run over the retrieved data</text>
+
+    <!-- column headers -->
+    <g font-size="10" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.1" opacity=".75">
+      <text x="40" y="132">IF THE CHECKS SAY</text>
+      <text x="330" y="132">DOSSIER v2 RECOMMENDS</text>
+      <text x="862" y="132" text-anchor="end">EFFECT</text>
+    </g>
+    <line x1="40" y1="140" x2="860" y2="140" stroke="#6B7280" stroke-width="1" opacity=".35"/>
+
+    <!-- row 1 -->
+    <text x="40" y="170" font-size="12.5">all five checks pass</text>
+    <line x1="292" y1="166" x2="320" y2="166" stroke="#6B7280" stroke-width="1.2" marker-end="url(#lp)"/>
+    <text x="330" y="164" font-size="12.5">Proceed with SBDD on 6X48. Hand off the receptor,</text>
+    <text x="330" y="180" font-size="12.5">site, training set and holdout.</text>
+    <rect x="754" y="152" width="106" height="22" rx="2" fill="none" stroke="#6B7280" stroke-width="1"/>
+    <text x="807" y="167" font-size="10.5" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">confirmed</text>
+    <line x1="40" y1="200" x2="860" y2="200" stroke="#6B7280" stroke-width="1" opacity=".18"/>
+
+    <!-- row 2 -->
+    <text x="40" y="230" font-size="12.5">holdout overlap &gt; 0</text>
+    <line x1="292" y1="226" x2="320" y2="226" stroke="#6B7280" stroke-width="1.2" marker-end="url(#lp)"/>
+    <text x="330" y="224" font-size="12.5" fill="#7C89E8">Withdraw the time-split claim. Hand off with a</text>
+    <text x="330" y="240" font-size="12.5" fill="#7C89E8">scaffold split instead.</text>
+    <rect x="754" y="212" width="106" height="22" rx="2" fill="none" stroke="#7C89E8" stroke-width="1.4"/>
+    <text x="807" y="227" font-size="10.5" text-anchor="middle" fill="#7C89E8" font-family="ui-monospace, Menlo, monospace">changed</text>
+    <line x1="40" y1="260" x2="860" y2="260" stroke="#6B7280" stroke-width="1" opacity=".18"/>
+
+    <!-- row 3 -->
+    <text x="40" y="290" font-size="12.5">one scaffold only, span &lt; 2 logs,</text>
+    <text x="40" y="306" font-size="12.5">or resolution worse than 3.5 Å</text>
+    <line x1="292" y1="292" x2="320" y2="292" stroke="#6B7280" stroke-width="1.2" marker-end="url(#lp)"/>
+    <text x="330" y="290" font-size="12.5" fill="#C0714F">Not tractable for structure-based design. Go ligand-based,</text>
+    <text x="330" y="306" font-size="12.5" fill="#C0714F">or generate data first.</text>
+    <rect x="754" y="278" width="106" height="22" rx="2" fill="none" stroke="#C0714F" stroke-width="1.6"/>
+    <text x="807" y="293" font-size="10.5" text-anchor="middle" fill="#C0714F" font-family="ui-monospace, Menlo, monospace">reversed</text>
+    <line x1="40" y1="326" x2="860" y2="326" stroke="#6B7280" stroke-width="1" opacity=".18"/>
+
+    <text x="40" y="356" font-size="11.5" font-style="italic">The agent writes the top box before it can see any of these numbers.</text>
+    <text x="40" y="374" font-size="11.5" font-style="italic">Two of the three rows overturn what it committed to.</text>
+  </g>
+</svg>

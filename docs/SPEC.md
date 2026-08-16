@@ -1,0 +1,345 @@
+# SPEC — target dossier agent
+
+- **SCOPE**
+  - Input: protein target identifier
+  - Output: `dossier.html`
+  - Agent decides whether target is tractable for structure-based small-molecule drug design
+  - Agent performs no structure-based calculation
+  - Terminal verdicts: `proceed`, `triage-only`, `not ready`, `no structure`, `insufficient retrieval`
+  - No docking, no free-energy methods, no molecular dynamics
+  - Submission 10:45 Sun 16 Aug 2026
+  - Freeze 10:15 Sun 16 Aug 2026
+
+- **PARAMETERS** — target-agnostic, the only values `dossier/` may hold
+  - `SCOUT_DEADLINE_S` = 180
+  - `REPLICATES` = 2
+  - `RESOLVER_TIMEOUT_S` = 30
+  - `RESOLVER_CONCURRENCY` = 8
+  - `RESOLVER_BUDGET_S` = 300
+  - `MAX_STRUCTURES_RETURNED` = 50
+  - `MAX_SERIES_RETURNED` = 500
+
+- **THRESHOLDS** — target-agnostic decision rules
+  - Drug-like ligand: MW >= 250 and heavy atoms >= 15
+  - Series usable for SAR: `n_analogs` >= 20
+  - Series usable for SAR: `n_distinct_inchikeys` == `n_analogs`
+  - Series usable for SAR: `dominant_scaffold_n` >= 15
+  - Series usable for ranking: `activity_span_log` >= 2.0
+  - Time split valid: `holdout_overlap` == 0
+  - Congeneric series: >= 80% share one Murcko scaffold — descriptive only, never a gate
+  - Design-quality structure: resolution <= 2.5 Å
+  - Triage-quality structure: resolution <= 3.5 Å
+  - Experimental structure required: X-ray or cryo-EM with ligand density
+
+- **DERIVED AT RUNTIME** — never hard-coded, always an output
+  - Receptor and fallback receptor — from `structures`
+  - Box-defining ligand — from `structures`
+  - Training set accessions — from `bioactivity`
+  - Training cutoff date — from the holdout's priority date
+  - Holdout accession and size — from `patents`
+  - Series core scaffold — from `joins.scaffold_match`
+  - Second target — operator argument
+
+- **REGRESSION FIXTURE — SORT1** — `tests/fixtures/sort1.py`, `tests/` only
+  - Purpose: known-correct answers, so a broken scout is distinguishable from an honest negative
+  - Import into `dossier/` is forbidden
+  - Expected receptor: 6X48
+  - Expected fallback: 5MRI
+  - Expected best resolution: 2.9 Å
+  - Expected recommendation qualifier: triage-only
+  - Expected site-defining ligand: UP4
+  - Expected training sets: CHEMBL3091, CHEMBL4680051
+  - Expected training cutoff: 2020-12-31
+  - Expected holdout: PubChem AID 2202264
+  - Expected holdout size: 106
+  - Expected series core: 5,5-dimethyl-L-norleucine
+  - Expected `holdout_overlap`: 0
+  - Assert each expected value in the matching build-order step
+
+- **GENERALISATION RUN — CTSL** — no fixture, by design
+  - Purpose: prove the pipeline works on a target whose answers nobody encoded
+  - Assert the run completes
+  - Assert every answer carries a grade
+  - Assert the gap list renders
+  - Assert a recommendation is produced
+  - Never assert a specific receptor, accession or count
+  - A negative recommendation is a pass
+
+- **ENVIRONMENT**
+  - Set `pyproject.toml` `requires-python` = `"==3.12.*"`
+  - Create `.venv` on Python 3.12
+  - Install into `.venv`: rdkit, requests
+  - Create `.venv-design` separately: rdkit, crem, admet-ai, mol_ga
+  - Create `~/.paperclip/venv` separately: requests, click, pyyaml
+  - Assert `sys.version_info[:2] == (3, 12)`
+  - Require MCP: ChEMBL, PubMed, bioRxiv
+  - Require CLI: `paperclip` >= 0.7.36
+  - Never resolve ADMET-AI, PyTDC, AiZynthFinder, Boltz into one venv
+
+- **GRADES**
+  - Values: `measured`, `verified`, `documented`, `inferred`, `unverified`
+  - `measured` requires `query` and `output_hash`
+  - `verified` requires resolvable `source_id` and `source_url`
+  - `documented` requires resolvable `source_id` and `source_url`
+  - `inferred` requires nothing
+  - `unverified` requires `reason`
+  - Resolve `verified` and `documented` only
+  - On resolver failure set grade to `inferred`
+  - On resolver failure set `demoted_from`
+  - On resolver failure flag in dossier
+
+- **SCHEMA**
+  - Table `run`
+    - `run_id` TEXT PK
+    - `target` TEXT NOT NULL
+    - `started_at`, `finished_at` TEXT
+    - `tokens`, `tool_calls` INT
+  - Table `record`
+    - `record_id` TEXT PK
+    - `run_id` TEXT FK → run
+    - `scout`, `claim`, `value` TEXT NOT NULL
+    - `grade` TEXT NOT NULL, CHECK in grade values
+    - `source_id`, `source_url`, `source_date` TEXT
+    - `retrieved_at`, `query` TEXT NOT NULL
+    - `output_hash`, `reason` TEXT
+    - CHECK: grade NOT IN (`verified`,`documented`) OR `source_url` IS NOT NULL
+    - CHECK: grade <> `measured` OR `output_hash` IS NOT NULL
+    - CHECK: grade <> `unverified` OR `reason` IS NOT NULL
+  - Table `resolution`
+    - `record_id` TEXT PK FK → record
+    - `resolved` INT NOT NULL
+    - `fetched_at` TEXT
+    - `span_found` INT
+    - `demoted_from`, `note` TEXT
+  - Table `join_result`
+    - `join_id` TEXT PK
+    - `run_id` TEXT FK → run
+    - `kind`, `input_record_ids`, `result`, `grade` TEXT NOT NULL
+  - Table `answer`
+    - `answer_id` TEXT PK
+    - `run_id` TEXT FK → run
+    - `question_no` INT, CHECK BETWEEN 1 AND 5
+    - `value`, `grade` TEXT NOT NULL
+    - `agree_n`, `agree_of` INT
+  - Table `gap`
+    - `gap_id` TEXT PK
+    - `run_id` TEXT FK → run
+    - `description`, `reason` TEXT NOT NULL
+  - Table `check_result`
+    - `check_id` TEXT PK
+    - `run_id` TEXT FK → run
+    - `kind` TEXT NOT NULL
+    - `value`, `threshold` REAL NOT NULL
+    - `passed` INT NOT NULL
+    - `computed_at` TEXT NOT NULL
+  - Table `dossier`
+    - `dossier_id` TEXT PK
+    - `run_id` TEXT FK → run
+    - `version` INT NOT NULL
+    - `recommendation`, `failure_condition`, `created_at` TEXT NOT NULL
+
+- **LAYOUT**
+  - `dossier/cli.py`
+  - `dossier/store.py`
+  - `dossier/dispatch.py`
+  - `dossier/grades.py`
+  - `dossier/resolver.py`
+  - `dossier/joins.py`
+  - `dossier/answers.py`
+  - `dossier/replicate.py`
+  - `dossier/feasibility.py`
+  - `dossier/loop.py`
+  - `dossier/render.py`
+  - `dossier/scouts/base.py`
+  - `dossier/scouts/structures.py`
+  - `dossier/scouts/bioactivity.py`
+  - `dossier/scouts/patents.py`
+  - `dossier/scouts/assays.py`
+  - `dossier/scouts/literature.py`
+  - `tests/`
+
+- **SCOUT CONTRACT**
+  - Expose `name: str`
+  - Expose `deadline_s: int`
+  - Expose `brief(target) -> str`
+  - Expose `run(target) -> list[Record]`
+  - Build brief self-contained
+  - Never pass orchestrator history into brief
+  - Never name an expected accession, structure or compound in a brief
+  - Parameterise every brief on `target` alone
+  - Never give a scout a spawn tool
+  - Emit `claim="requested_subdomain"` for sub-search
+  - Return records, never prose
+  - On deadline expiry write `gap` row
+  - On deadline expiry attach partial records
+  - On deadline expiry continue the run
+
+- **SCOUTS**
+  - `structures`
+    - Sources: RCSB PDB, AlphaFold DB
+    - Return PDB IDs, resolution, method, bound ligand HET codes
+    - Count drug-like-ligand entries separately from total entries
+    - Drug-like = MW >= 250 and heavy atoms >= 15
+  - `bioactivity`
+    - Sources: ChEMBL MCP, PubChem, BindingDB
+    - Return distinct compounds, potency range, median, assay types
+    - Report distinct compounds, never activity records
+  - `patents`
+    - Sources: PubChem AIDs, patent depositions, ClinicalTrials.gov
+    - Return series, priority dates, applicant, potency, clinical stage
+    - Query PubChem and ChEMBL both
+  - `assays`
+    - Sources: assay descriptions
+    - Return readouts and computational proxy
+    - Flag qHTS screens
+    - Count records carrying a real IC50
+  - `literature`
+    - Sources: Paperclip, PubMed MCP
+    - Return mechanism, disease link, clinical outcomes, failures
+    - Search pathway and phenotypic aliases, not only direct target
+
+- **RESOLVER**
+  - Signature `resolve(record) -> Resolution`
+  - Skip unless grade in `verified`, `documented`
+  - Fetch `source_id` independently of the scout
+  - Confirm `value` appears in fetched document
+  - On failure demote to `inferred` and flag
+  - Implement fetcher: PDB accession
+  - Implement fetcher: ChEMBL accession
+  - Implement fetcher: PubChem AID
+  - Implement fetcher: DOI
+  - Implement fetcher: PMID
+  - Implement fetcher: patent number
+  - Implement fetcher: shell command
+  - Use Paperclip for literature spans
+
+- **JOINS**
+  - `scaffold_match(series_core_smiles, ligand_smiles) -> bool`
+  - `holdout_disjointness(train, holdout) -> Disjointness` — fields `novel`, `overlap`, on InChIKey
+  - `alias_resolution(target) -> list[str]`
+  - `record_vs_compound(records) -> tuple[int, int]`
+  - Write one `join_result` row per join
+
+- **FEASIBILITY**
+  - Run after dossier v1 is written
+  - Use RDKit only
+  - Skip entirely if a required scout gapped; verdict is `insufficient retrieval`
+  - `holdout_overlap` must equal 0, else withdraw time-split claim
+  - `n_analogs` must be >= 20, else not ready
+  - `n_distinct_inchikeys` must equal `n_analogs`, else not ready
+  - `dominant_scaffold_n` must be >= 15, else not ready
+  - `activity_span_log` must be >= 2.0, else not ready
+  - `ligand_mw` must be >= 250, else reject receptor
+  - `ligand_heavy` must be >= 15, else reject receptor
+  - `best_resolution` must be <= 2.5, else qualify recommendation as triage-only
+  - `best_resolution` must be <= 3.5, else reject receptor
+  - Write one `check_result` row per check
+
+- **LOOP**
+  - If `holdout_overlap` > 0 → withdraw time-split claim, hand off scaffold split
+  - Else if `n_distinct_inchikeys` != `n_analogs` → not ready for SBDD
+  - Else if `dominant_scaffold_n` < 15 → not ready for SBDD
+  - Else if `n_analogs` < 20 → not ready for SBDD
+  - Else if `activity_span_log` < 2.0 → not ready for SBDD
+  - Else if `best_resolution` > 3.5 → not tractable, no design-quality structure
+  - Else if `best_resolution` > 2.5 → proceed with SBDD, qualified triage-only
+  - Else → proceed with SBDD on the derived receptor, hand off spec
+  - Write dossier version 2
+  - Run on 2 targets, at least 1 failing a check
+  - Assert every branch reachable with a seven-case table over `next_step`
+  - Branch reachability is a unit test, never inferred from two real targets
+
+- **REPLICATION**
+  - Re-run answer 1 (receptor choice) `REPLICATES` times in fresh contexts
+  - Never replicate answer 4 — `holdout_overlap` is deterministic
+  - Write `agree_n` and `agree_of`
+  - Report agreement in dossier
+
+- **DOSSIER OUTPUT**
+  - Section 1: five answers with value, grade, `source_id`, `agree_n`/`agree_of`
+  - Section 2: contradictions between scouts
+  - Section 3: gap list, rendered even when empty
+  - Section 4: recommendation and failure condition
+  - Section 5: hand-off spec — receptor, resolution, method, site origin, train accession, holdout accession, fallback receptor, resolution qualifier
+  - Section 6: cost line — tokens, tool calls, wall clock
+  - Expand any answer to `query`, `output_hash`, `source_date`, `retrieved_at`
+  - Emit static HTML
+  - Require no network at open
+  - Reuse `docs/roadmap.css`
+  - Commit one choice per answer, never a candidate list
+
+
+- **BUILD ORDER AND SCHEDULE**
+  - See `PLAN.md` — seven stages, 645 min of build plus a 20 min cold run
+  - `PLAN.md` supersedes any step list or timing stated here
+
+- **DEMO — 5 MIN**
+  - 15s — state input and the five questions
+  - 45s — run cold, five scouts concurrent
+  - 60s — show scaffold match and set difference
+  - 90s — show the loop, two targets, two recommendations
+  - 30s — show resolver demoting a fabricated accession
+  - 30s — expand a claim to its query and hashes
+  - 30s — state limitations
+
+- **MUST NOT**
+  - Hard-code any target-specific identifier anywhere under `dossier/`
+  - Import `tests/fixtures` from `dossier/`
+  - Dock
+  - Import modal
+  - Require GPU
+  - Rank claims with a model judge
+  - Give scouts a spawn tool
+  - Pass orchestrator history into a brief
+  - Delete filter-flagged compounds silently
+  - Report activity records as distinct compounds
+  - Run `pip install vina` on arm64
+  - Block the run on a hung scout
+  - Ship a dossier without a gap section
+  - Start a build step before the previous verifies
+
+- **EXCLUDED**
+  - AlphaFold3
+  - Protenix
+  - PyRosetta
+  - proto-language
+  - Biohub / ESMFold2
+  - Saturn
+  - f-RAG
+  - Chemlactica
+  - Chemma
+  - MolMIM local
+  - DeLinker
+  - SQUID
+  - LigBuilder V3
+  - RAscore
+  - DeepChem
+  - molfeat
+  - ASKCOS
+  - Chemformer
+  - PostEra Manifold
+  - ZINC22 bulk download
+  - AiZynthFinder in-loop
+  - BenchFlow
+  - Modal
+  - AutoDock Vina
+  - MAPT
+  - Excluded-tool notes: MSA `search_mode="local"`; `ccd-lookup`/`pubchem-fetch` for novel compounds; `BRICS.BRICSBuild` without `islice`
+
+- **DONE**
+  - [ ] 5 scouts return typed records within deadline
+  - [ ] killing 1 scout yields a gap entry, not a crash
+  - [ ] fabricated accession demoted and flagged
+  - [ ] `holdout_disjointness` returns 106 novel and 0 overlap, or time-split claim withdrawn
+  - [ ] every claim carries grade and resolvable identifier
+  - [ ] gap list renders when empty
+  - [ ] 2 targets give 2 different recommendations
+  - [ ] page opens with no network
+  - [ ] cost line present
+  - [ ] second target run cold, output kept
+  - [ ] `grep -rE '6X48|5MRI|UP4|CHEMBL3091|CHEMBL4680051|2202264|norleucine|SORT1|CTSL' dossier/` returns nothing
+
+- **OPEN**
+  - Repo write access — account has pull-only — owner: user
+  - Confirm 10:45 submission time against acceptance email — owner: user
+  - `pyproject.toml` still `requires-python = ">=3.13"` — owner: unassigned

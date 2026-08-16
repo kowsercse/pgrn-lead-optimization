@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="396" viewBox="0 0 980 396" role="img" aria-label="A target identifier fans out to five scouts bound to specific databases; their structured findings pass through a join stage that cross-references them, producing a dossier on which a scientist makes a go or no-go decision.">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="#6B7280"/>
+        </marker>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="#7C89E8"/>
+        </marker>
+      </defs>
+      <g font-family="ui-sans-serif, -apple-system, sans-serif" font-size="12.5" fill="#6B7280">
+
+        <rect x="10" y="168" width="96" height="54" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+        <text x="58" y="190" text-anchor="middle">Target</text>
+        <text x="58" y="207" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="11.5" opacity=".7">SORT1</text>
+
+        <!-- scouts -->
+        <g>
+          <rect x="176" y="24" width="248" height="52" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+          <text x="192" y="46">Structures</text>
+          <text x="192" y="63" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">RCSB PDB · AlphaFold DB</text>
+
+          <rect x="176" y="92" width="248" height="52" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+          <text x="192" y="114">Bioactivity</text>
+          <text x="192" y="131" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">ChEMBL · PubChem · BindingDB</text>
+
+          <rect x="176" y="160" width="248" height="52" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+          <text x="192" y="182">Patents and clinical</text>
+          <text x="192" y="199" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">patent depositions · trials</text>
+
+          <rect x="176" y="228" width="248" height="52" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+          <text x="192" y="250">Assays and tractability</text>
+          <text x="192" y="267" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">assay descriptions · readouts</text>
+
+          <rect x="176" y="296" width="248" height="52" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+          <text x="192" y="318">Literature</text>
+          <text x="192" y="335" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">Paperclip · PubMed</text>
+        </g>
+
+        <!-- resolver + join -->
+        <rect x="486" y="86" width="182" height="62" rx="3" fill="none" stroke="#6B7280" stroke-width="1.4"/>
+        <text x="502" y="110" font-size="12">Resolve citations</text>
+        <text x="502" y="128" font-size="10.5" opacity=".65" font-family="ui-monospace, Menlo, monospace">fetch · confirm span · demote</text>
+
+        <rect x="486" y="164" width="182" height="112" rx="3" fill="none" stroke="#7C89E8" stroke-width="1.8"/>
+        <text x="577" y="188" text-anchor="middle" fill="#7C89E8">Join</text>
+        <g font-size="10.5" fill="#7C89E8" opacity=".85" font-family="ui-monospace, Menlo, monospace">
+          <text x="502" y="210">scaffold ↔ ligand</text>
+          <text x="502" y="228">InChIKey set ops</text>
+          <text x="502" y="246">alias resolution</text>
+          <text x="502" y="264">record vs compound</text>
+        </g>
+        <line x1="577" y1="148" x2="577" y2="158" stroke="#6B7280" stroke-width="1.4" marker-end="url(#a1)"/>
+
+        <!-- dossier -->
+        <rect x="716" y="140" width="126" height="92" rx="3" fill="none" stroke="#6B7280" stroke-width="1.4"/>
+        <text x="779" y="172" text-anchor="middle">Dossier</text>
+        <text x="779" y="190" text-anchor="middle" font-size="10.5" opacity=".7">5 answers</text>
+        <text x="779" y="207" text-anchor="middle" font-size="10.5" opacity=".7">+ gaps</text>
+
+        <rect x="890" y="160" width="78" height="52" rx="3" fill="none" stroke="#6B7280" stroke-width="1.2"/>
+        <text x="929" y="182" text-anchor="middle" font-size="11.5">Scientist</text>
+        <text x="929" y="199" text-anchor="middle" font-size="11.5">go / no-go</text>
+
+        <!-- arrows -->
+        <g stroke="#6B7280" stroke-width="1.2" fill="none" marker-end="url(#a1)">
+          <path d="M106,195 C140,195 140,50 170,50"/>
+          <path d="M106,195 C140,195 140,118 170,118"/>
+          <line x1="106" y1="188" x2="170" y2="186"/>
+          <path d="M106,195 C140,195 140,254 170,254"/>
+          <path d="M106,195 C140,195 140,322 170,322"/>
+        </g>
+        <g stroke="#6B7280" stroke-width="1.2" fill="none" marker-end="url(#a1)">
+          <path d="M424,50 C452,50 452,110 480,113"/>
+          <path d="M424,118 C452,118 452,115 480,116"/>
+          <path d="M424,186 C452,186 452,122 480,119"/>
+          <path d="M424,254 C452,254 452,126 480,121"/>
+          <path d="M424,322 C452,322 452,130 480,123"/>
+        </g>
+        <line x1="668" y1="220" x2="710" y2="192" stroke="#6B7280" stroke-width="1.4" marker-end="url(#a1)"/>
+        <line x1="842" y1="186" x2="884" y2="186" stroke="#6B7280" stroke-width="1.4" marker-end="url(#a1)"/>
+
+        <text x="440" y="368" text-anchor="middle" font-size="11" opacity=".65">every scout returns typed records with a resolvable source identifier and an evidence grade</text>
+      </g>
+    </svg>
