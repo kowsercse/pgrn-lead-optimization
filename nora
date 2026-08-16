@@ -398,19 +398,17 @@ usage: nora [--port PORT] <command> [args]
 
 Local dev process manager for pgrn-lead-optimization.
 
-Setup:
+Commands:
   setup                     download JDK 21 + Conductor jar, install python/ui deps
+  start                     start server, worker, and ui
+  stop                      stop server, worker, and ui
+  status                    show status of server, worker, and ui
+  logs <component>          tail logs for one component (server|worker|ui)
 
 Components (start|stop|restart|status|logs; ui also supports build):
   server                    manage the Conductor OSS server
   worker                    manage the python agent worker
   ui                        manage the UI dev server
-
-All-in-one:
-  start                     start server, worker, and ui
-  stop                      stop server, worker, and ui
-  status                    show status of server, worker, and ui
-  logs <component>          tail logs for one component (server|worker|ui)
 
 Options:
   -h, --help                show this help message and exit
